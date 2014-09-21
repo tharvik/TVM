@@ -93,22 +93,14 @@ class Evaluator(ctx: Context, prog: Program) {
     case False() => BoolValue(false)
 
     case And(lhs, rhs) =>
-      val lv = evalExpr(ectx, lhs)
-      val rv = evalExpr(ectx, rhs)
-      val res = (lv, rv) match {
-        case (BoolValue(l), BoolValue(r)) => l && r
-        case x => fatal("Not evaluating to Bool: " + x, e)
-      }
-      BoolValue(res)
+      val lv = evalExpr(ectx, lhs).asBool
+      if(!lv) BoolValue(false)
+      else evalExpr(ectx, rhs)
 
     case Or(lhs, rhs) =>
-      val lv = evalExpr(ectx, lhs)
-      val rv = evalExpr(ectx, rhs)
-      val res = (lv, rv) match {
-        case (BoolValue(l), BoolValue(r)) => l || r
-        case x => fatal("Not evaluating to Bool: " + x, e)
-      }
-      BoolValue(res)
+      val lv = evalExpr(ectx, lhs).asBool
+      if(lv) BoolValue(true)
+      else evalExpr(ectx, rhs)
 
     case Plus(lhs, rhs) =>
       val lv = evalExpr(ectx, lhs)
