@@ -204,24 +204,12 @@ class Evaluator(ctx: Context, prog: Program) {
       mctx.declareVariable("this") // TODO better way than reserving word
       mctx.setVariable("this", o)
 
-      // declare variables of the class or containing method
-      for (f <- o.fields) {
-        mctx.declareVariable(f._1)
-        f._2.map(mctx.setVariable(f._1, _))
-      }
-
       // declare variables of the method
       for (v <- m.vars)
         mctx.declareVariable(v.id.value)
 
       // run the method code
       m.stats.foreach(evalStatement(mctx, _))
-
-      // get the resulting values of the class variables
-      for (f <- o.fields) {
-        val v = mctx.getVariable(f._1)
-        o.setField(f._1, v)
-      }
 
       // return of the context
       evalExpr(mctx, m.retExpr)
