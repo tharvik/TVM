@@ -58,9 +58,11 @@ class Evaluator(ctx: Context, prog: Program) {
       }
 
     case While(expr, stat) =>
-      val l = List(stat, While(expr, stat))
-      val i = If(expr, Block(l), None)
-      evalStatement(ectx, i)
+      var test = evalExpr(ectx, expr).asBool
+      while (test) {
+        evalStatement(ectx, stat)
+        test = evalExpr(ectx, expr).asBool
+      }
 
     case Println(expr) =>
       val v = evalExpr(ectx, expr)
