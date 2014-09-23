@@ -1,11 +1,11 @@
-object stack_main {
+object stack {
 	def main() : Unit = {
-		if((new stack()).go()) println("No errors");
+		if((new stack_c()).go()) println("No errors");
 		else println("Errors");
 	}
 }
 
-class stack {
+class stack_c {
 
 	var array: Int[];
 	var count: Int;
@@ -97,13 +97,13 @@ class stack {
 		return count;
 	}
 
-	def reverse(): stack = {
+	def reverse(): stack_c = {
 
-		var a: stack;
+		var a: stack_c;
 		var c: Int;
 		var okay: Bool;
 
-		a = new stack();
+		a = new stack_c();
 		okay = a.init();
 		c = count;
 

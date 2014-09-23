@@ -1,12 +1,12 @@
-object sed_main {
+object sed {
 
 	def main() : Unit = {
-		println((new sed()).parse());
+		println((new sed_c()).parse());
 	}
 
 }
 
-class sed {
+class sed_c {
 
 	def parse_1(array: stack, cmd: stack) : stack = {
 		var out: stack;
