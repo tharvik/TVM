@@ -3,8 +3,11 @@
 readonly toolc_path="toolc-reference-2.3.jar"
 readonly prefix='test_'
 
-for f in programs/*
-do
+set -e
+
+compile_test() {
+	f="$1"
+
 	classname="$(basename $(echo "$f" | cut -d . -f 1))"
 
 	sbt <<< "compile
@@ -19,6 +22,16 @@ exit" | tail -n +8 | head -n -2 > "$prefix"1
 		echo "Error in $f"
 		exit 1
 	}
-done
+}
+
+if [ $# -ne 0 ]
+then
+	compile_test "$@"
+else
+	for f in programs/*
+	do
+		compile_test "$f"
+	done
+fi
 
 rm "$prefix"1 "$prefix"2
