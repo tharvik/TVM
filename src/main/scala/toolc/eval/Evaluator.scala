@@ -50,12 +50,9 @@ class Evaluator(ctx: Context, prog: Program) {
       for (stat <- stats) evalStatement(ectx, stat)
 
     case If(expr, thn, els) =>
-      val test = evalExpr(ectx, expr)
-      if (test.asBool) evalStatement(ectx, thn)
-      else els match {
-        case Some(x) => evalStatement(ectx, x)
-        case None =>
-      }
+      val test = evalExpr(ectx, expr).asBool
+      if (test) evalStatement(ectx, thn)
+      else els.map(evalStatement(ectx, _))
 
     case While(expr, stat) =>
       var test = evalExpr(ectx, expr).asBool
@@ -69,6 +66,7 @@ class Evaluator(ctx: Context, prog: Program) {
       v match {
         case StringValue(str) => println(str)
         case IntValue(x) => println(x)
+        case BoolValue(x) => println(x)
         case x => fatal("Println only accept String and Int: " + x, stmt)
       }
 
@@ -82,8 +80,8 @@ class Evaluator(ctx: Context, prog: Program) {
       val v = evalExpr(ectx, expr).asInt
       array.setIndex(i, v)
 
-    case _ =>
-      fatal("unnexpected statement", stmt)
+    case x =>
+      fatal("unnexpected statement: " + x, stmt)
   }
 
   def evalExpr(ectx: EvaluationContext, e: ExprTree): Value = e match {
@@ -178,7 +176,6 @@ class Evaluator(ctx: Context, prog: Program) {
 
     case MethodCall(obj, meth, args) =>
 
-      // create method context
       val o = evalExpr(ectx, obj).asObject
       val m = findMethod(o.cd, meth.value)
       val mctx = new MethodContext(o)
@@ -186,7 +183,6 @@ class Evaluator(ctx: Context, prog: Program) {
       if (args.length != m.args.length)
         fatal("Size of args to " + meth + " is not of the right size", e)
 
-      // add arguments to method context
       for (i <- 0 until m.args.length) {
         val s = m.args(i).id.value
         val v = evalExpr(ectx, args(i))
@@ -194,18 +190,14 @@ class Evaluator(ctx: Context, prog: Program) {
         mctx.setVariable(s, v)
       }
 
-      // reverse variable for "this" variable
       mctx.declareVariable("this") // TODO better way than reserving word
       mctx.setVariable("this", o)
 
-      // declare variables of the method
       for (v <- m.vars)
         mctx.declareVariable(v.id.value)
 
-      // run the method code
       m.stats.foreach(evalStatement(mctx, _))
 
-      // return of the context
       evalExpr(mctx, m.retExpr)
 
     case Identifier(name) =>
