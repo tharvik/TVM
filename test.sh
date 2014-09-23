@@ -26,7 +26,10 @@ exit" | tail -n +8 | head -n -2 > "$prefix"1
 
 if [ $# -ne 0 ]
 then
-	compile_test "$@"
+	for f in "$@"
+	do
+		compile_test "$f"
+	done
 else
 	for f in programs/*
 	do
