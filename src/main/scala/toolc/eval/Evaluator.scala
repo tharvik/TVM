@@ -267,10 +267,10 @@ class Evaluator(ctx: Context, prog: Program) {
     def declareVariable(name: String): Unit = fatal("The main method contains no variable and/or field")
   }
 
-  // Helper functions to query the current program
   def findMethod(cd: ClassDecl, name: String): MethodDecl = {
     cd.methods.find(_.id.value == name).orElse(
-      cd.parent.flatMap(p => findClass(p.value).methods.find(_.id.value == name))).getOrElse(fatal("Unknown method " + cd.id + "." + name))
+      cd.parent.map(p => findMethod(findClass(p.value), name))
+    ).getOrElse(fatal("Unknown method "+cd.id+"."+name))
   }
 
   def findClass(name: String): ClassDecl = {
