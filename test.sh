@@ -7,15 +7,12 @@ readonly prefix='test_'
 set -e
 
 compile() {
-	sbt <<< 'package
-exit' > /dev/null
+	sbt <<< ';package;exit' > /dev/null
 
 	ls target/scala-*/toolc_*.jar
 }
 
 match() {
-	local ref="$toolc_path"
-	local lib="$libraries"
 	local com="$1"
 	local f="$2"
 
@@ -23,11 +20,11 @@ match() {
 
 	classname="$(basename $(echo "$f" | cut -d . -f 1))"
 
-	scala -cp "$com:$lib" 'toolc.Main' "$f" > "$prefix"1
+	scala -cp "$com:$libraries" 'toolc.Main' "$f" > "$prefix"1
 
 	echo -n '.'
 
-	java -jar "$ref" "$f"
+	java -jar "$toolc_path" "$f"
 	echo -n '.'
 	java $classname > "$prefix"2
 
