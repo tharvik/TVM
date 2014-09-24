@@ -19,7 +19,7 @@ match() {
 	local com="$1"
 	local f="$2"
 
-	echo -n "\"$f\"."
+	echo -n "Testing: $f ."
 
 	classname="$(basename $(echo "$f" | cut -d . -f 1))"
 
@@ -40,7 +40,9 @@ match() {
 	echo '.'
 }
 
+echo -n 'Compiling...'
 local_test="$(compile)"
+echo
 
 if [ $# -ne 0 ]
 then
@@ -55,4 +57,4 @@ else
 	done
 fi
 
-#rm "$prefix"1 "$prefix"2
+rm "$prefix"1 "$prefix"2
