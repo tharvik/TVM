@@ -1,40 +1,58 @@
 #!/bin/bash
 
 readonly toolc_path="toolc-reference-2.3.jar"
+readonly libraries="lib/toolc-parser_2.11-2.0.jar"
 readonly prefix='test_'
 
 set -e
 
-compile_test() {
-	f="$1"
+compile() {
+	sbt <<< 'package
+exit' > /dev/null
+
+	ls target/scala-*/toolc_*.jar
+}
+
+match() {
+	local ref="$toolc_path"
+	local lib="$libraries"
+	local com="$1"
+	local f="$2"
+
+	echo -n "\"$f\"."
 
 	classname="$(basename $(echo "$f" | cut -d . -f 1))"
 
-	sbt <<< "compile
-run $f
-exit" | tail -n +8 | head -n -2 > "$prefix"1
+	scala -cp "$com:$lib" 'toolc.Main' "$f" > "$prefix"1
 
-	java -jar "$toolc_path" "$f"
+	echo -n '.'
+
+	java -jar "$ref" "$f"
+	echo -n '.'
 	java $classname > "$prefix"2
+
 	rm -f *.class
 
 	diff -u "$prefix"1 "$prefix"2 || {
-		echo "Error in $f"
+		echo '!'
 		exit 1
 	}
+	echo '.'
 }
+
+local_test="$(compile)"
 
 if [ $# -ne 0 ]
 then
 	for f in "$@"
 	do
-		compile_test "$f"
+		match "$local_test" "$f"
 	done
 else
 	for f in programs/*
 	do
-		compile_test "$f"
+		match "$local_test" "$f"
 	done
 fi
 
-rm "$prefix"1 "$prefix"2
+#rm "$prefix"1 "$prefix"2
