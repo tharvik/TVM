@@ -3,8 +3,30 @@
 readonly toolc_path="toolc-reference-2.3.jar"
 readonly libraries="lib/toolc-parser_2.11-2.0.jar"
 readonly prefix='test_'
+t='^Loading /.*/sbt-.*sbt-launch-lib.bash$'
+t="$t|^.\[0m\[.[\d+m(info|trace|error|success).\[0m\]"
+readonly sbt_cleanup="$t"
 
-set -e
+if [[ $1 = '-s' ]]
+then
+	t='true'
+	shift
+else
+	t='false'
+fi
+readonly use_sbt="$t"
+
+check() {
+	local status=$1
+
+	if [ $status -eq 0 ]
+	then
+		echo -n '.'
+	else
+		echo '!'
+		exit 1
+	fi
+}
 
 compile() {
 	sbt <<< ';package;exit' > /dev/null
@@ -18,28 +40,33 @@ match() {
 
 	echo -n "Testing: $f ."
 
-	classname="$(basename $(echo "$f" | cut -d . -f 1))"
+	if $use_sbt
+	then
+		sbt_cmd=";compile; run $f;exit"
+		sbt <<< "$sbt_cmd" | \
+			grep -vE "$sbt_cleanup|^> $sbt_cmd$" > "$prefix"1
+		check $?
+	else
+		scala -cp "$com:$libraries" 'toolc.Main' "$f" > "$prefix"1
+		check $?
+	fi
 
-	scala -cp "$com:$libraries" 'toolc.Main' "$f" > "$prefix"1
-
-	echo -n '.'
-
-	java -jar "$toolc_path" "$f"
-	echo -n '.'
-	java $classname > "$prefix"2
-
+	java -jar "$toolc_path" --tokens "$f" > "$prefix"2
+	check $?
 	rm -f *.class
 
-	diff -u "$prefix"1 "$prefix"2 || {
-		echo '!'
-		exit 1
-	}
-	echo '.'
+	diff -q "$prefix"1 "$prefix"2 > /dev/null
+	check $?
+
+	echo
 }
 
-echo -n 'Compiling...'
-local_test="$(compile)"
-echo
+if ! $use_sbt
+then
+	echo -n 'Compiling ...'
+	local_test="$(compile)"
+	echo
+fi
 
 if [ $# -ne 0 ]
 then
