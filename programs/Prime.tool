@@ -15,25 +15,27 @@ class Primes {
         var i : Int;
         var j : Int;
         var potentialPrime : Int;
-        var intDiv : Int;
+        var maxDivisor : Int;
         
         size = number;
-        potentialPrime = 2;
+        potentialPrime = 3;
         primeNumbers = new Int[number];
-        i = 0;
-        
+        primeNumbers[0] = 2;
+        i = 1;
         while(i < size){
         	j = 1;
-        	while(j < potentialPrime){
+        	/* +1 Since we don't have <= and +1 since it's always lower than the real square root*/
+   	        maxDivisor = (new Sqrt().compute(potentialPrime)) + 2;
+        	while(j < maxDivisor){
         		j = j + 1;
-        		if(j == potentialPrime){
+        		if(j == maxDivisor){
         			primeNumbers[i] = potentialPrime;
         			i = i + 1;	
         		}else if((potentialPrime / j) * j == potentialPrime){
-        			j = potentialPrime;
+        			j = maxDivisor;
         		}
         	}
-        	potentialPrime = potentialPrime + 1;
+        	potentialPrime = potentialPrime + 2;
         }
         return this;
     }
@@ -51,5 +53,22 @@ class Primes {
     	}
     	
     	return result;
+    }
+}
+
+/*Copy of class Sqrt*/
+class Sqrt {
+	
+	var estimate : Int;
+	var counter : Int;
+	def compute(number : Int) : Int = {
+        estimate = number;
+        counter = 0;
+        /* 20 iterations should be enough for all integers*/
+        while(counter < 20){
+        	estimate = (estimate/2 + number/(estimate*2));
+        	counter = counter + 1;
+        }
+        return estimate;
     }
 }
