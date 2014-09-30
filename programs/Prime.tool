@@ -11,7 +11,7 @@ class Primes {
 	var primeNumbers : Int[];
 	var size : Int;
 	
-	def init(number : Int) : Int[] = {
+	def init(number : Int) : Primes = {
         var i : Int;
         var j : Int;
         var potentialPrime : Int;
@@ -45,7 +45,7 @@ class Primes {
     	var i : Int;
     	i = 1;
     	
-    	result = primeNumbers[0];
+    	result = "" + primeNumbers[0];
     	
     	while(i < size){
     		result = result + ", " + primeNumbers[i];
