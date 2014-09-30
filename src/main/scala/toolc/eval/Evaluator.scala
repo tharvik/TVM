@@ -92,12 +92,12 @@ class Evaluator(ctx: Context, prog: Program) {
 
     case And(lhs, rhs) =>
       val lv = evalExpr(ectx, lhs).asBool
-      if(!lv) BoolValue(false)
+      if (!lv) BoolValue(false)
       else evalExpr(ectx, rhs)
 
     case Or(lhs, rhs) =>
       val lv = evalExpr(ectx, lhs).asBool
-      if(lv) BoolValue(true)
+      if (lv) BoolValue(true)
       else evalExpr(ectx, rhs)
 
     case Plus(lhs, rhs) =>
@@ -269,8 +269,8 @@ class Evaluator(ctx: Context, prog: Program) {
 
   def findMethod(cd: ClassDecl, name: String): MethodDecl = {
     cd.methods.find(_.id.value == name).orElse(
-      cd.parent.map(p => findMethod(findClass(p.value), name))
-    ).getOrElse(fatal("Unknown method "+cd.id+"."+name))
+      cd.parent.map(p => findMethod(findClass(p.value), name)))
+        .getOrElse(fatal("Unknown method " + cd.id + "." + name))
   }
 
   def findClass(name: String): ClassDecl = {
