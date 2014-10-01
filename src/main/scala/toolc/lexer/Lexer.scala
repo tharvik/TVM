@@ -56,19 +56,24 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
 
       if (ch.remain) {
 
-        beginPos = currentPos
         var parsed = false
         var parsingString = false
         var oldParsingString = false
         var stringToken = ""
         var litteralString = false
+        var oldLitteralString = false
         while (!parsed) {
 
           parsed = true // generally true
           var loadNext = true // generally true
 
+          oldLitteralString = litteralString
+
           oldParsingString = parsingString
           parsingString = false // generally false
+
+          if (!oldParsingString)
+            beginPos = currentPos
 
           ch.current match {
 
@@ -118,33 +123,48 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
                 parsed = false
                 var stillComment = true;
                 while (stillComment) {
-                  while (ch.remain && ch.current != '*') ch.next
+                  while (ch.remain && ch.current != '*')
+                    ch.next
                   ch.next
-                  stillComment = (ch.current == '/');
+                  stillComment = (ch.current != '/');
                 }
               } else {
                 loadNext = false
-                DIV
+                current = new Token(DIV)
               }
 
             case '"' =>
-              litteralString = !litteralString
+              do {
+                stringToken += ch.current
+                ch.next
+              } while (ch.current != '"')
+
+              stringToken = stringToken.substring(1)
 
             case _ =>
               parsed = false
-              if (!ch.current.isWhitespace) {
 
-                if(!oldParsingString)
+              if (litteralString)
+                stringToken += ch.current
+              else if (!ch.current.isWhitespace) {
+
+                if (!oldParsingString)
                   beginPos = currentPos
-                
+
                 parsingString = true
                 stringToken += ch.current
+
               } else if (oldParsingString) {
-                parsed = true;
+                parsed = true
               }
           }
 
+          if (ch.current == '"')
+            current = new STRLIT(stringToken)
+
           if (oldParsingString && !parsingString) {
+
+            loadNext = false
 
             if (litteralString) {
               current = new STRLIT(stringToken)
@@ -158,9 +178,11 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
                   current = new ID(stringToken)
               }
             }
-
           }
-          if (loadNext && ch.remain) ch.next
+
+          if (loadNext && ch.remain)
+            ch.next
+
         }
       } else {
         current = new Token(EOF)
