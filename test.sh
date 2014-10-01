@@ -1,7 +1,7 @@
 #!/bin/bash
 
-readonly toolc_path="toolc-reference-2.3.jar"
-readonly libraries="lib/toolc-parser_2.11-2.0.jar"
+readonly toolc_path="toolc-reference-2.4.jar"
+readonly libraries=""
 readonly prefix='test_'
 t='^Loading /.*/sbt-.*sbt-launch-lib.bash$'
 t="$t|^.\[0m\[.[\d+m(info|trace|error|success).\[0m\]"
