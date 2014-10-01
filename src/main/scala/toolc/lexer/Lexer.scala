@@ -40,7 +40,7 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
     import ctx.reporter._
 
     object ch {
-      var current = source.next();
+      var current: Char = source.next
       def remain = source.hasNext
       def next = current = source.next();
     }
@@ -51,53 +51,63 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
 
     def readNextToken(): Token = {
 
-      var current: TokenKind = BAD;
+      var current: Token = new Token(BAD);
+      var beginPos = currentPos
 
       if (ch.remain) {
 
-        var parsed = false;
+        beginPos = currentPos
+        var parsed = false
+        var parsingString = false
+        var oldParsingString = false
+        var stringToken = ""
+        var litteralString = false
         while (!parsed) {
 
           parsed = true // generally true
-          var loadNext = true; // generally true
+          var loadNext = true // generally true
+
+          oldParsingString = parsingString
+          parsingString = false // generally false
+
           ch.current match {
 
-            case ':' => current = COLON
-            case ';' => current = SEMICOLON
-            case '.' => current = DOT
-            case ',' => current = COMMA
+            case ':' => current = new Token(COLON)
+            case ';' => current = new Token(SEMICOLON)
+            case '.' => current = new Token(DOT)
+            case ',' => current = new Token(COMMA)
 
             case '=' =>
               ch.next
               if (ch.current == '=') {
-                current = EQUALS
+                current = new Token(EQUALS)
               } else {
-                current = EQSIGN
+                current = new Token(EQSIGN)
                 loadNext = false
               }
 
-            case '!' => current = BANG
-            case '(' => current = LPAREN
-            case ')' => current = RPAREN
-            case '[' => current = LBRACKET
-            case ']' => current = RBRACKET
-            case '{' => current = LBRACE
-            case '}' => current = RBRACE
+            case '!' => current = new Token(BANG)
+            case '(' => current = new Token(LPAREN)
+            case ')' => current = new Token(RPAREN)
+            case '[' => current = new Token(LBRACKET)
+            case ']' => current = new Token(RBRACKET)
+            case '{' => current = new Token(LBRACE)
+            case '}' => current = new Token(RBRACE)
 
             case '&' =>
               ch.next
-              if (ch.current == '&') current = AND
+              if (ch.current == '&') current = new Token(AND)
               else loadNext = false
 
             case '|' =>
               ch.next
-              if (ch.current == '|') current = OR
+              if (ch.current == '|') current = new Token(OR)
               else loadNext = false
 
-            case '<' => current = LESSTHAN
-            case '+' => current = PLUS
-            case '-' => current = MINUS
-            case '*' => current = TIMES
+            case '<' => current = new Token(LESSTHAN)
+            case '+' => current = new Token(PLUS)
+            case '-' => current = new Token(MINUS)
+            case '*' => current = new Token(TIMES)
 
             case '/' =>
               ch.next
@@ -117,19 +127,45 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
                 DIV
               }
 
-            case _ => BAD
+            case '"' =>
+              litteralString = !litteralString
 
+            case _ =>
+              parsed = false
+              if (!ch.current.isWhitespace) {
+
+                if(!oldParsingString)
+                  beginPos = currentPos
+                
+                parsingString = true
+                stringToken += ch.current
+              } else if (oldParsingString) {
+                parsed = true;
+              }
           }
 
-          println(currentPos().line + ":" + currentPos.col + ":" + ch.current)
+          if (oldParsingString && !parsingString) {
 
+            if (litteralString) {
+              current = new STRLIT(stringToken)
+            } else {
+              if (Tokens.set.contains(stringToken)) {
+                current = new Token(map(stringToken))
+              } else {
+                if (stringToken.forall(_.isDigit))
+                  current = new INTLIT(stringToken.toInt)
+                else
+                  current = new ID(stringToken)
+              }
+            }
+
+          }
           if (loadNext && ch.remain) ch.next
         }
       } else {
-        current = EOF
+        current = new Token(EOF)
       }
-      val token = new Token(current);
-      token.setPos(currentPos)
+      current.setPos(beginPos)
     }
 
     new Iterator[Token] {

@@ -72,6 +72,31 @@ object Tokens {
   case object NEW extends TokenKind         // new
   case object PRINTLN extends TokenKind     // println
 
+  val map = Map(
+    "object"       ->  OBJECT,
+    "class"        ->  CLASS,
+    "def"          ->  DEF,
+    "var"          ->  VAR,
+    "unit"         ->  UNIT,
+    "main"         ->  MAIN,
+    "string"       ->  STRING,
+    "extends"      ->  EXTENDS,
+    "int"          ->  INT,
+    "boolean"      ->  BOOLEAN,
+    "while"        ->  WHILE,
+    "if"           ->  IF,
+    "else"         ->  ELSE,
+    "return"       ->  RETURN,
+    "length"       ->  LENGTH,
+    "true"         ->  TRUE,
+    "false"        ->  FALSE,
+    "this"         ->  THIS,
+    "new"          ->  NEW,
+    "println"      ->  PRINTLN
+  )
+  
+  val set = map.keySet
+
   // Identifiers
   class ID(val value: String) extends Token(IDKIND) {
     override def toString = "ID("+value+")"
