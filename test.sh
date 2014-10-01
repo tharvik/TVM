@@ -55,6 +55,10 @@ match() {
 	check $?
 	rm -f *.class
 
+	#> DEBUG
+	sed -i 's/[ ]*$//' "$prefix"{1,2}
+	#< DEBUG
+
 	diff -q "$prefix"1 "$prefix"2 > /dev/null
 	check $?
 
