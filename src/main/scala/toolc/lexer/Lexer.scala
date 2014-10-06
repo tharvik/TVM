@@ -3,30 +3,12 @@ package lexer
 
 import java.io.File
 
+import scala.annotation.tailrec
 import scala.io.Source
 
-import Tokens.AND
-import Tokens.BAD
-import Tokens.BANG
-import Tokens.COLON
-import Tokens.COMMA
-import Tokens.DIV
-import Tokens.DOT
 import Tokens.EOF
-import Tokens.EQSIGN
-import Tokens.EQUALS
-import Tokens.LBRACE
-import Tokens.LBRACKET
-import Tokens.LESSTHAN
-import Tokens.LPAREN
-import Tokens.MINUS
-import Tokens.OR
-import Tokens.PLUS
-import Tokens.RBRACE
-import Tokens.RBRACKET
-import Tokens.RPAREN
-import Tokens.SEMICOLON
-import Tokens.TIMES
+import Tokens.map
+import Tokens.set
 import toolc.utils.Pipeline
 import utils.Context
 import utils.Pipeline
@@ -37,157 +19,77 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
 
   def run(ctx: Context)(f: File): Iterator[Token] = {
     val source = Source.fromFile(f)
+    val buffered = source.buffered
     import ctx.reporter._
+    import Tokens._
 
-    object ch {
-      var current: Char = source.next
-      def remain = source.hasNext
-      def next = current = source.next();
-    }
+    val variable_like = set.filter(_.toSet.subsetOf(default_component))
 
     def currentPos(): Positioned = {
       new Positioned {}.setPos(f, source.pos)
     }
 
-    def readNextToken(): Token = {
+    @tailrec
+    def parseNextToken(buffer: String, pos: Positioned, remains: Set[String]): (String, Positioned) = {
 
-      var current: Token = new Token(BAD);
-      var beginPos = currentPos
+      if (pos.line == 37) {
+        None
+      }
 
-      if (ch.remain) {
+      if (!buffered.hasNext)
+        (buffer, pos)
+      else {
 
-        var parsed = false
-        var parsingString = false
-        var oldParsingString = false
-        var stringToken = ""
-        var litteralString = false
-        var oldLitteralString = false
-        while (!parsed) {
+        if (remains.size == 0) {
+          val head = buffered.head
+          if (variable_like.contains(buffer) && !default_component.contains(head))
+            (buffer, pos)
+          else if (default_component.contains(head))
+            parseNextToken(buffer + buffered.next, pos, Set())
+          else
+            (buffer, pos)
 
-          parsed = true // generally true
-          var loadNext = true // generally true
+        } else {
+          val head = buffered.head
+          val str = buffer + head
+          val rest = remains.filter(_.startsWith(str))
+          if (rest.size == 0)
+            if (remains.contains(buffer))
+              if (variable_like.contains(buffer))
+                parseNextToken(buffer, pos, Set())
+              else
+                (buffer, pos)
+            else
+              parseNextToken(buffer, pos, rest)
+          else
+            parseNextToken(buffer + buffered.next, pos, rest)
+        }
 
-          oldLitteralString = litteralString
+      }
+    }
 
-          oldParsingString = parsingString
-          parsingString = false // generally false
+    @tailrec
+    def readNextTokenPos: (Token, Positioned) = {
 
-          if (!oldParsingString)
-            beginPos = currentPos
+      if (buffered.hasNext) {
+        val tuple = parseNextToken("", currentPos, set)
+        val str = tuple._1
+        val pos = tuple._2
 
-          ch.current match {
-
-            case ':' => current = new Token(COLON)
-            case ';' => current = new Token(SEMICOLON)
-            case '.' => current = new Token(DOT)
-            case ',' => current = new Token(COMMA)
-
-            case '=' =>
-              ch.next
-              if (ch.current == '=') {
-                current = new Token(EQUALS)
-              } else {
-                current = new Token(EQSIGN)
-                loadNext = false
-              }
-
-            case '!' => current = new Token(BANG)
-            case '(' => current = new Token(LPAREN)
-            case ')' => current = new Token(RPAREN)
-            case '[' => current = new Token(LBRACKET)
-            case ']' => current = new Token(RBRACKET)
-            case '{' => current = new Token(LBRACE)
-            case '}' => current = new Token(RBRACE)
-
-            case '&' =>
-              ch.next
-              if (ch.current == '&') current = new Token(AND)
-              else loadNext = false
-
-            case '|' =>
-              ch.next
-              if (ch.current == '|') current = new Token(OR)
-              else loadNext = false
-
-            case '<' => current = new Token(LESSTHAN)
-            case '+' => current = new Token(PLUS)
-            case '-' => current = new Token(MINUS)
-            case '*' => current = new Token(TIMES)
-
-            case '/' =>
-              ch.next
-              if (ch.current == '/') {
-                parsed = false
-                while (ch.remain && ch.current != '\n') ch.next
-              } else if (ch.current == '*') {
-                parsed = false
-                var stillComment = true;
-                while (stillComment) {
-                  while (ch.remain && ch.current != '*')
-                    ch.next
-                  ch.next
-                  stillComment = (ch.current != '/');
-                }
-              } else {
-                loadNext = false
-                current = new Token(DIV)
-              }
-
-            case '"' =>
-              do {
-                stringToken += ch.current
-                ch.next
-              } while (ch.current != '"')
-
-              stringToken = stringToken.substring(1)
-
-            case _ =>
-              parsed = false
-
-              if (litteralString)
-                stringToken += ch.current
-              else if (!ch.current.isWhitespace) {
-
-                if (!oldParsingString)
-                  beginPos = currentPos
-
-                parsingString = true
-                stringToken += ch.current
-
-              } else if (oldParsingString) {
-                parsed = true
-              }
-          }
-
-          if (ch.current == '"')
-            current = new STRLIT(stringToken)
-
-          if (oldParsingString && !parsingString) {
-
-            loadNext = false
-
-            if (litteralString) {
-              current = new STRLIT(stringToken)
-            } else {
-              if (Tokens.set.contains(stringToken)) {
-                current = new Token(map(stringToken))
-              } else {
-                if (stringToken.forall(_.isDigit))
-                  current = new INTLIT(stringToken.toInt)
-                else
-                  current = new ID(stringToken)
-              }
-            }
-          }
-
-          if (loadNext && ch.remain)
-            ch.next
-
+        map(str)(str, buffered) match {
+          case Some(x) => (x, pos)
+          case None => readNextTokenPos
         }
       } else {
-        current = new Token(EOF)
+        (new Token(EOF), currentPos)
       }
-      current.setPos(beginPos)
+    }
+
+    def readNextToken(): Token = {
+      if (buffered.hasNext) buffered.head
+
+      val tuple = readNextTokenPos
+      tuple._1.setPos(tuple._2)
     }
 
     new Iterator[Token] {

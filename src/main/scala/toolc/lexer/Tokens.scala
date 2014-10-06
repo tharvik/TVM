@@ -2,6 +2,7 @@ package toolc
 package lexer
 
 import utils._
+import scala.io.BufferedSource
 
 sealed class Token(val kind: TokenKind) extends Positioned {
   override def toString = kind.toString
@@ -72,28 +73,97 @@ object Tokens {
   case object NEW extends TokenKind         // new
   case object PRINTLN extends TokenKind     // println
 
-  val map = Map(
-    "object"       ->  OBJECT,
-    "class"        ->  CLASS,
-    "def"          ->  DEF,
-    "var"          ->  VAR,
-    "Unit"         ->  UNIT,
-    "main"         ->  MAIN,
-    "String"       ->  STRING,
-    "extends"      ->  EXTENDS,
-    "Int"          ->  INT,
-    "Bool"         ->  BOOLEAN,
-    "while"        ->  WHILE,
-    "if"           ->  IF,
-    "else"         ->  ELSE,
-    "return"       ->  RETURN,
-    "length"       ->  LENGTH,
-    "true"         ->  TRUE,
-    "false"        ->  FALSE,
-    "this"         ->  THIS,
-    "new"          ->  NEW,
-    "println"      ->  PRINTLN
-  )
+  def identity(tk: TokenKind): (String,BufferedIterator[Char]) => Option[Token] =
+    (_,_) => Some(new Token(tk))
+
+  def skip: (String,BufferedIterator[Char]) => Option[Token] =
+    (_,_) => None
+
+  def default(key: String) : (String,BufferedIterator[Char]) => Option[Token] =
+    (_,_) =>
+      if(key.forall(_.isDigit))
+        if(key(0) == '0' && key.size > 1)
+          Some(new Token(BAD))
+        else
+          Some(new INTLIT(key.toInt))
+      else
+        Some(new ID(key))
+
+  def char_range(base: Char, count: Int): IndexedSeq[Char] =
+    for(i <- 0 to (count - 1))
+      yield (Char.char2int(base) + i).toChar
+
+  val default_component: Set[Char] =
+    Set('_') ++
+    char_range('A', 26) ++
+    char_range('a', 26) ++
+    char_range('0', 10)
+
+  val map: Map[String,(String,BufferedIterator[Char]) => Option[Token]] = Map(
+    ":"            -> identity(COLON),
+    ";"            -> identity(SEMICOLON),
+    "."            -> identity(DOT),
+    ","            -> identity(COMMA),
+    "="            -> identity(EQSIGN),
+    "=="           -> identity(EQUALS),
+    "!"            -> identity(BANG),
+    "("            -> identity(LPAREN),
+    ")"            -> identity(RPAREN),
+    "["            -> identity(LBRACKET),
+    "]"            -> identity(RBRACKET),
+    "{"            -> identity(LBRACE),
+    "}"            -> identity(RBRACE),
+    "&&"           -> identity(AND),
+    "||"           -> identity(OR),
+    "<"            -> identity(LESSTHAN),
+    "+"            -> identity(PLUS),
+    "-"            -> identity(MINUS),
+    "*"            -> identity(TIMES),
+    "/"            -> identity(DIV),
+    "object"       -> identity(OBJECT),
+    "class"        -> identity(CLASS),
+    "def"          -> identity(DEF),
+    "var"          -> identity(VAR),
+    "Unit"         -> identity(UNIT),
+    "main"         -> identity(MAIN),
+    "String"       -> identity(STRING),
+    "extends"      -> identity(EXTENDS),
+    "Int"          -> identity(INT),
+    "Bool"         -> identity(BOOLEAN),
+    "while"        -> identity(WHILE),
+    "if"           -> identity(IF),
+    "else"         -> identity(ELSE),
+    "return"       -> identity(RETURN),
+    "length"       -> identity(LENGTH),
+    "true"         -> identity(TRUE),
+    "false"        -> identity(FALSE),
+    "this"         -> identity(THIS),
+    "new"          -> identity(NEW),
+    "println"      -> identity(PRINTLN),
+
+    " "            -> skip,
+    "\t"           -> skip,
+    "\n"           -> skip,
+
+    "//"           -> ((_: String, buffered: BufferedIterator[Char]) => {
+                        while(buffered.head != '\n') buffered.next
+                        None
+                      }),
+    "/*"           -> ((x: String, buffered: BufferedIterator[Char]) => {
+                        var continue = true
+                        while(continue) {
+                          while(buffered.next != '*') {}
+                          continue = (buffered.head != '/')
+                        }
+                        buffered.next
+                        None
+                      }),
+
+    "\""           -> ((x: String, buffered: BufferedIterator[Char]) => {
+                        val str = buffered.takeWhile(_ != '"').mkString
+                        Some(new STRLIT(str))
+                      })
+  ).withDefault(default)
   
   val set = map.keySet
 
