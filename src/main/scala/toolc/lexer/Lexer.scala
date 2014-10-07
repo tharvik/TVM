@@ -24,47 +24,50 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
     import Tokens._
 
     val variable_like = set.filter(_.toSet.subsetOf(default_component))
+    val specials = set.diff(variable_like)
 
     def currentPos(): Positioned = {
       new Positioned {}.setPos(f, source.pos)
     }
 
     @tailrec
-    def parseNextToken(buffer: String, pos: Positioned, remains: Set[String]): (String, Positioned) = {
+    def parseNextId(buffer: String): String = {
+      val head = buffered.head
+      if (default_component.contains(head))
+        parseNextId(buffer + buffered.next)
+      else
+        buffer
+    }
 
-      if (pos.line == 37) {
-        None
-      }
+    @tailrec
+    def parseNextToken(buffer: String, position: Positioned, remains: Set[String]): (String, Positioned) = {
 
       if (!buffered.hasNext)
-        (buffer, pos)
+        (buffer, position)
+
       else {
+        val head = buffered.head
+        val rest = remains.filter(_.startsWith(buffer + head))
 
-        if (remains.size == 0) {
-          val head = buffered.head
-          if (variable_like.contains(buffer) && !default_component.contains(head))
-            (buffer, pos)
-          else if (default_component.contains(head))
-            parseNextToken(buffer + buffered.next, pos, Set())
-          else
-            (buffer, pos)
-
-        } else {
-          val head = buffered.head
-          val str = buffer + head
-          val rest = remains.filter(_.startsWith(str))
-          if (rest.size == 0)
-            if (remains.contains(buffer))
-              if (variable_like.contains(buffer))
-                parseNextToken(buffer, pos, Set())
-              else
-                (buffer, pos)
-            else
-              parseNextToken(buffer, pos, rest)
-          else
-            parseNextToken(buffer + buffered.next, pos, rest)
+        def nextBuffer = buffer + buffered.next
+        
+        val pos = if(buffer == "") currentPos else position
+        
+        if(pos.line == 69 && pos.col == 33) {
+          None
         }
-
+        
+        if(rest.isEmpty)
+          if(remains.contains(buffer))
+        	(buffer, pos)
+          else
+            (parseNextId(buffer), pos)
+          
+        else if(rest.size == 1 && rest.contains(buffer + head))
+          (nextBuffer, pos)
+          
+        else
+          parseNextToken(nextBuffer, pos, rest)
       }
     }
 
@@ -72,7 +75,7 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
     def readNextTokenPos: (Token, Positioned) = {
 
       if (buffered.hasNext) {
-        val tuple = parseNextToken("", currentPos, set)
+        val tuple = parseNextToken("", currentPos, specials)
         val str = tuple._1
         val pos = tuple._2
 

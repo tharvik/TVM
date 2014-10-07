@@ -82,12 +82,15 @@ object Tokens {
   def default(key: String) : (String,BufferedIterator[Char]) => Option[Token] =
     (_,_) =>
       if(key.forall(_.isDigit))
-        if(key(0) == '0' && key.size > 1)
+        if(key.size > 1 && key(0) == '0') {
+          println("Integral beginning with a zero")
           Some(new Token(BAD))
-        else
+        } else
           Some(new INTLIT(key.toInt))
-      else
+      else if(key.toSet.subsetOf(default_component))
         Some(new ID(key))
+      else
+        Some(new Token(BAD))
 
   def char_range(base: Char, count: Int): IndexedSeq[Char] =
     for(i <- 0 to (count - 1))
@@ -161,7 +164,11 @@ object Tokens {
 
     "\""           -> ((x: String, buffered: BufferedIterator[Char]) => {
                         val str = buffered.takeWhile(_ != '"').mkString
-                        Some(new STRLIT(str))
+                        if(str.contains('\n')) {
+                          println("Line feed inside of string litteral")
+                          Some(new Token(BAD))
+                        } else
+                          Some(new STRLIT(str))
                       })
   ).withDefault(default)
   
