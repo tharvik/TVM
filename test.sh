@@ -1,6 +1,6 @@
 #!/bin/bash
 
-readonly toolc_path="toolc-reference-2.4.jar"
+readonly toolc_path="toolc-reference-2.5.jar"
 readonly libraries=""
 readonly prefix='test_'
 t='^Loading /.*/sbt-.*sbt-launch-lib.bash$'
@@ -23,8 +23,7 @@ check() {
 	then
 		echo -n '.'
 	else
-		echo '!'
-		exit 1
+		echo -n '!'
 	fi
 }
 
@@ -38,31 +37,44 @@ match() {
 	local com="$1"
 	local f="$2"
 
-	echo -n "Testing: $f ."
+	echo -n "Testing: $f "
 
+	local ret1
 	if $use_sbt
 	then
 		sbt_cmd=";compile; run $f;exit"
 		sbt <<< "$sbt_cmd" | \
-			grep -vE "$sbt_cleanup|^> $sbt_cmd$" > "$prefix"1
-		check $?
+			grep -vE "$sbt_cleanup|^> $sbt_cmd$" \
+				> "$prefix"1_tmp 2>/dev/null
+		ret1=$?
+		check $ret1
 	else
-		scala -cp "$com:$libraries" 'toolc.Main' "$f" > "$prefix"1
-		check $?
+		scala -cp "$com:$libraries" 'toolc.Main' "$f" \
+			> "$prefix"1_tmp 2>/dev/null
+		ret1=$?
+		check $ret1
 	fi
 
-	java -jar "$toolc_path" --tokens "$f" > "$prefix"2
-	check $?
+	local ret2
+	java -jar "$toolc_path" --tokens "$f" > "$prefix"2_tmp 2>/dev/null
+	ret2=$?
+	check $ret2
+
+	[[ $ret1 -ne $ret2 ]] && echo && exit 1
 	rm -f *.class
 
-	#> DEBUG
-	sed -i 's/[ ]*$//' "$prefix"{1,2}
-	#< DEBUG
+	awk 'BEGIN {b=0} b == 0 {print} b == 0 && /^BAD/ {b=1}' \
+		"$prefix"1_tmp > "$prefix"1
+	awk 'BEGIN {b=0} b == 0 {print} b == 0 && /^BAD/ {b=1}' \
+		"$prefix"2_tmp > "$prefix"2
 
+	local ret3
 	diff -q "$prefix"1 "$prefix"2 > /dev/null
-	check $?
+	ret3=$?
+	check $ret3
 
 	echo
+	[[ $ret3 -ne 0 ]] && exit 1
 }
 
 if ! $use_sbt
@@ -79,10 +91,10 @@ then
 		match "$local_test" "$f"
 	done
 else
-	for f in programs/*
+	for f in programs/* wrong_programs/*
 	do
 		match "$local_test" "$f"
 	done
 fi
 
-rm "$prefix"1 "$prefix"2
+rm "$prefix"{1,2}{_tmp,}
