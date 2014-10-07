@@ -72,25 +72,31 @@ object Tokens {
   case object THIS extends TokenKind        // this
   case object NEW extends TokenKind         // new
   case object PRINTLN extends TokenKind     // println
+  
+  def identity(tk: TokenKind): (String,BufferedIterator[Char]) => Option[(Token, String)] =
+    (_,_) => Some(new Token(tk), null)
 
-  def identity(tk: TokenKind): (String,BufferedIterator[Char]) => Option[Token] =
-    (_,_) => Some(new Token(tk))
-
-  def skip: (String,BufferedIterator[Char]) => Option[Token] =
+  def skip: (String,BufferedIterator[Char]) => Option[(Token, String)] =
     (_,_) => None
 
-  def default(key: String) : (String,BufferedIterator[Char]) => Option[Token] =
+  def default(key: String) : (String,BufferedIterator[Char]) => Option[(Token, String)] =
     (_,_) =>
+      
       if(key.forall(_.isDigit))
         if(key.size > 1 && key(0) == '0') {
-          println("Integral beginning with a zero")
-          Some(new Token(BAD))
+          Some(new Token(BAD),"Integral beginning with a zero")
         } else
-          Some(new INTLIT(key.toInt))
+          Some(new INTLIT(key.toInt), null)
+          
       else if(key.toSet.subsetOf(default_component))
-        Some(new ID(key))
+        if(key(0).isLetter)
+          Some(new ID(key), null)
+        else {
+          Some(new Token(BAD), "Identifier begin without a letter")
+        }
+      
       else
-        Some(new Token(BAD))
+        Some(new Token(BAD), "Invalid character")
 
   def char_range(base: Char, count: Int): IndexedSeq[Char] =
     for(i <- 0 to (count - 1))
@@ -102,7 +108,7 @@ object Tokens {
     char_range('a', 26) ++
     char_range('0', 10)
 
-  val map: Map[String,(String,BufferedIterator[Char]) => Option[Token]] = Map(
+  val map: Map[String,(String,BufferedIterator[Char]) => Option[(Token,String)]] = Map(
     ":"            -> identity(COLON),
     ";"            -> identity(SEMICOLON),
     "."            -> identity(DOT),
@@ -165,10 +171,9 @@ object Tokens {
     "\""           -> ((x: String, buffered: BufferedIterator[Char]) => {
                         val str = buffered.takeWhile(_ != '"').mkString
                         if(str.contains('\n')) {
-                          println("Line feed inside of string litteral")
-                          Some(new Token(BAD))
+                          Some(new Token(BAD), "Line feed inside of string litteral")
                         } else
-                          Some(new STRLIT(str))
+                          Some(new STRLIT(str), null)
                       })
   ).withDefault(default)
   

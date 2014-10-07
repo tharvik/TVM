@@ -50,22 +50,22 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
         val rest = remains.filter(_.startsWith(buffer + head))
 
         def nextBuffer = buffer + buffered.next
-        
-        val pos = if(buffer == "") currentPos else position
-        
-        if(pos.line == 69 && pos.col == 33) {
+
+        val pos = if (buffer == "") currentPos else position
+
+        if (pos.line == 5 && pos.col == 17) {
           None
         }
-        
-        if(rest.isEmpty)
-          if(remains.contains(buffer))
-        	(buffer, pos)
+
+        if (rest.isEmpty)
+          if (remains.contains(buffer))
+            (buffer, pos)
           else
-            (parseNextId(buffer), pos)
-          
-        else if(rest.size == 1 && rest.contains(buffer + head))
+            (parseNextId(nextBuffer), pos)
+
+        else if (rest.size == 1 && rest.contains(buffer + head))
           (nextBuffer, pos)
-          
+
         else
           parseNextToken(nextBuffer, pos, rest)
       }
@@ -80,7 +80,9 @@ object Lexer extends Pipeline[File, Iterator[Token]] {
         val pos = tuple._2
 
         map(str)(str, buffered) match {
-          case Some(x) => (x, pos)
+          case Some(t: (Token,String)) =>
+            if(t._2 != null) ctx.reporter.error(t._2, pos)
+            (t._1, pos)
           case None => readNextTokenPos
         }
       } else {
