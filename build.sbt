@@ -7,5 +7,3 @@ scalaVersion := "2.11.2"
 scalacOptions += "-deprecation"
 
 scalacOptions += "-unchecked"
-
-scalariformSettings
