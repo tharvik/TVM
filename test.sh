@@ -1,6 +1,6 @@
 #!/bin/bash
 
-readonly toolc_path="toolc-reference-2.5.jar"
+readonly toolc_path="toolc-reference-2.6.jar"
 readonly libraries=""
 readonly prefix='test_'
 t='^Loading /.*/sbt-.*sbt-launch-lib.bash$'
