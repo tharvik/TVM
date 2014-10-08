@@ -156,7 +156,8 @@ object Tokens {
     "\r"           -> skip,
 
     "//"           -> ((_: String, buffered: BufferedIterator[Char]) => {
-                        while(buffered.head != '\n') buffered.next
+                        while(buffered.head != '\n' && buffered.head != '\r')
+                          buffered.next
                         None
                       }),
     "/*"           -> ((x: String, buffered: BufferedIterator[Char]) => {
@@ -171,7 +172,7 @@ object Tokens {
 
     "\""           -> ((x: String, buffered: BufferedIterator[Char]) => {
                         val str = buffered.takeWhile(_ != '"').mkString
-                        if(str.contains('\n')) {
+                        if(str.contains('\n') || str.contains('\r')) {
                           Some(new Token(BAD), "Line feed inside of string litteral")
                         } else
                           Some(new STRLIT(str), null)
