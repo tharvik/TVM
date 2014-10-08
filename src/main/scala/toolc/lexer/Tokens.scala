@@ -153,6 +153,7 @@ object Tokens {
     " "            -> skip,
     "\t"           -> skip,
     "\n"           -> skip,
+    "\r"           -> skip,
 
     "//"           -> ((_: String, buffered: BufferedIterator[Char]) => {
                         while(buffered.head != '\n') buffered.next
