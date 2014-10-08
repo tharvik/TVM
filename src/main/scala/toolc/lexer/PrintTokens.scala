@@ -10,7 +10,7 @@ object PrintTokens extends Pipeline[Iterator[Token], Iterator[Token]] {
 
   def run(ctx: Context)(it: Iterator[Token]): Iterator[Token] = {
     val tokens = it.map { t =>
-      //println(s"$t(${t.line}:${t.col})");
+      println(s"$t(${t.line}:${t.col})");
       t
     }
 
