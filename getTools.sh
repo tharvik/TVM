@@ -7,7 +7,7 @@ readonly lara_course='clp14'
 readonly lara_tab='tests'
 readonly lara_group='64'
 readonly wget_opt='-nv'
-readonly tokens_transformer='./tokensToCode.sed'
+readonly tokens_transformer='./tokensToCode.awk'
 readonly beautifier='./beautifier.sed'
 
 set -e
