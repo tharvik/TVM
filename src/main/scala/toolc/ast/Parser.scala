@@ -214,7 +214,10 @@ object Parser extends Pipeline[Iterator[Token], Program] {
       eat(RPAREN)
       val thn = parseStatTree
       val els = currentToken.kind match {
-        case ELSE => Some(parseStatTree)
+        case ELSE => {
+          eat(ELSE)
+          Some(parseStatTree)
+        }
         case _    => None
       }
 
