@@ -96,7 +96,10 @@ object Parser extends Pipeline[Iterator[Token], Program] {
       val id = parseIdentifier
 
       val parent = currentToken.kind match {
-        case EXTENDS => Some(parseIdentifier)
+        case EXTENDS => {
+          eat(EXTENDS)
+          Some(parseIdentifier)
+        }
         case LBRACE  => None
         case _ => expected(EXTENDS, LBRACE)
       }
