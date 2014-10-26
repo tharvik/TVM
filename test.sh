@@ -1,7 +1,5 @@
 #!/bin/bash
 
-readonly toolc_path="toolc-reference-2.6.jar"
-readonly libraries=""
 readonly prefix='test_'
 t='^Loading /.*/sbt-.*sbt-launch-lib.bash$'
 t="$t|^.\[0m\[.[\d+m(info|trace|error|success).\[0m\]"
@@ -33,11 +31,9 @@ compile() {
 	ls target/scala-*/toolc_*.jar
 }
 
-match() {
-	local com="$1"
-	local f="$2"
-
-	echo -n "Testing: $f "
+generate() {
+	local com="${1}"
+	local out="${2}"
 
 	local ret1
 	if $use_sbt
@@ -45,30 +41,26 @@ match() {
 		sbt_cmd=";compile; run $f;exit"
 		sbt <<< "$sbt_cmd" | \
 			grep -vE "$sbt_cleanup|^> $sbt_cmd$" \
-				> "$prefix"1_tmp 2>/dev/null
+				> "${out}" 2>/dev/null
 		ret1=$?
 		check $ret1
 	else
-		scala -cp "$com:$libraries" 'toolc.Main' "$f" \
-			> "$prefix"1_tmp 2>/dev/null
+		scala -cp "$com" 'toolc.Main' "$f" \
+			> "${out}" 2>/dev/null
 		ret1=$?
 		check $ret1
 	fi
+}
 
-	local ret2
-	java -jar "$toolc_path" --tokens "$f" > "$prefix"2_tmp 2>/dev/null
-	ret2=$?
-	check $ret2
+match() {
+	local com="$1"
+	local f="$2"
 
-	[[ $ret1 -ne $ret2 ]] && echo && exit 1
-	rm -f *.class
+	echo -n "Testing: $f "
 
-	awk 'BEGIN {b=0} b == 0 {print} b == 0 && /^BAD/ {b=1}' \
-		"$prefix"1_tmp > "$prefix"1
-	awk 'BEGIN {b=0} b == 0 {print} b == 0 && /^BAD/ {b=1}' \
-		"$prefix"2_tmp > "$prefix"2
+	generate "${com}" "${prefix}"1
+	generate "${com}" "${prefix}"2
 
-	local ret3
 	diff -q "$prefix"1 "$prefix"2 > /dev/null
 	ret3=$?
 	check $ret3
@@ -97,4 +89,4 @@ else
 	done
 fi
 
-rm "$prefix"{1,2}{_tmp,}
+#rm "$prefix"{1,2}
