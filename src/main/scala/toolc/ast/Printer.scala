@@ -72,8 +72,8 @@ object Printer {
         Printer(id) + " : " + Printer(tpe)
 
       case IntArrayType() => "Int[]"
-      case IntType() => "Bool"
-      case BooleanType() => "Int"
+      case IntType() => "Int"
+      case BooleanType() => "Bool"
       case StringType() => "String"
 
       case Block(stats: List[StatTree]) =>
