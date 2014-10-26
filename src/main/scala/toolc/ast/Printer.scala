@@ -34,15 +34,15 @@ object Printer {
         eol +
         unroll(l, classes, eol)
       case MainObject(id: Identifier, stats: List[StatTree]) =>
-        "object " + Printer(id) + " {" + eol +
+        just(l)     +"object " + Printer(id) + " {" + eol +
         just(l + 1) + "def main() : Unit = {" + eol +
         unroll(l + 2, stats, eol) + eol +
         just(l + 1) + "}" + eol +
-        "}"
-      case ClassDecl(id: Identifier, parent: Option[Identifier], vars: List[VarDecl], methods: List[MethodDecl]) => {
-        val ext =
-          if(!parent.isEmpty) " extends " + Printer(parent.get) else ""
+        just(l)     + "}"
+      case ClassDecl(id: Identifier, parent: Option[Identifier],
+        vars: List[VarDecl], methods: List[MethodDecl]) => {
 
+        val ext = if(!parent.isEmpty) " extends " + Printer(parent.get) else ""
         "class " + Printer(id) + ext + " {" + eol +
         eol +
         unroll(l + 1, vars, eol) + eol +
@@ -53,7 +53,9 @@ object Printer {
 
       case VarDecl(tpe: TypeTree, id: Identifier) =>
         "var " + Printer(id) + " : " + Printer(tpe) + ";"
-      case MethodDecl(retType: TypeTree, id: Identifier, args: List[Formal], vars: List[VarDecl], stats: List[StatTree], retExpr: ExprTree) => {
+      case MethodDecl(retType: TypeTree, id: Identifier, args: List[Formal],
+        vars: List[VarDecl], stats: List[StatTree], retExpr: ExprTree) => {
+
         val strVar =
           if(vars.isEmpty) ""
           else eol + unroll(l + 1, vars, eol) + eol
@@ -71,10 +73,11 @@ object Printer {
       case Formal(tpe: TypeTree, id: Identifier) =>
         Printer(id) + " : " + Printer(tpe)
 
-      case IntArrayType() => "Int[]"
-      case IntType() => "Int"
-      case BooleanType() => "Bool"
-      case StringType() => "String"
+      case IntArrayType()            => "Int[]"
+      case BooleanType()             => "Bool"
+      case IntType()                 => "Int"
+      case StringType()              => "String"
+      case Identifier(value: String) => value
 
       case Block(stats: List[StatTree]) =>
         "{" + eol +
@@ -92,28 +95,28 @@ object Printer {
       case Assign(id: Identifier, expr: ExprTree) =>
         Printer(id) + " = " + Printer(expr) + ";"
       case ArrayAssign(id: Identifier, index: ExprTree, expr: ExprTree) =>
-        Printer(id) + "[" + Printer(index) + "] = " + Printer(expr)
+        Printer(id) + "[" + Printer(index) + "] = " + Printer(expr) + ";"
 
-      case And(lhs: ExprTree, rhs: ExprTree) => expr("&&", lhs, rhs)
-      case Or(lhs: ExprTree, rhs: ExprTree) => expr("||", lhs, rhs)
-      case Plus(lhs: ExprTree, rhs: ExprTree) => expr("+", lhs, rhs)
-      case Minus(lhs: ExprTree, rhs: ExprTree) => expr("-", lhs, rhs)
-      case Times(lhs: ExprTree, rhs: ExprTree) => expr("*", lhs, rhs)
-      case Div(lhs: ExprTree, rhs: ExprTree) => expr("/", lhs, rhs)
+      case And(lhs: ExprTree, rhs: ExprTree) =>      expr("&&", lhs, rhs)
+      case Or(lhs: ExprTree, rhs: ExprTree) =>       expr("||", lhs, rhs)
+      case Plus(lhs: ExprTree, rhs: ExprTree) =>     expr("+", lhs, rhs)
+      case Minus(lhs: ExprTree, rhs: ExprTree) =>    expr("-", lhs, rhs)
+      case Times(lhs: ExprTree, rhs: ExprTree) =>    expr("*", lhs, rhs)
+      case Div(lhs: ExprTree, rhs: ExprTree) =>      expr("/", lhs, rhs)
       case LessThan(lhs: ExprTree, rhs: ExprTree) => expr("<", lhs, rhs)
-      case Equals(lhs: ExprTree, rhs: ExprTree) => expr("==", lhs, rhs)
+      case Equals(lhs: ExprTree, rhs: ExprTree) =>   expr("==", lhs, rhs)
       case ArrayRead(arr: ExprTree, index: ExprTree) =>
         "(" + Printer(arr) + ")" + "[" + Printer(index) + "]"
       case ArrayLength(arr: ExprTree) =>
         "(" + Printer(arr) + ")" + ".length"
       case MethodCall(obj: ExprTree, meth: Identifier, args: List[ExprTree]) =>
-        "(" + Printer(obj) + ")." + Printer(meth) + "(" + unroll(0, args, ", ") + ")"
+        "(" + Printer(obj) + ")." + Printer(meth) +
+        "(" + unroll(0, args, ", ") + ")"
       case IntLit(value: Int) => value.toString
       case StringLit(value: String) => "\"" + value + "\""
 
       case True() => "true"
       case False() => "false"
-      case Identifier(value: String) => value
       case This() => "this"
       case NewIntArray(size: ExprTree) => "new Int[" + Printer(size) + "]"
       case New(tpe: Identifier) => "new " + Printer(tpe) + "()"
