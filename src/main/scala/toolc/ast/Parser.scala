@@ -64,14 +64,20 @@ object Parser extends Pipeline[Iterator[Token], Program] {
     }
 
     def parseGoal: Program = {
+
+      val pos = currentToken
+
       val main = parseMainObject
       val classes = parseListClassDecl
       eat(EOF)
 
-      Program(main, classes)
+      Program(main, classes).setPos(pos)
     }
 
     def parseMainObject: MainObject = {
+
+      val pos = currentToken
+
       eat(OBJECT)
       val id = parseIdentifier
 
@@ -88,10 +94,13 @@ object Parser extends Pipeline[Iterator[Token], Program] {
       eat(RBRACE)
       eat(RBRACE)
 
-      MainObject(id, stats)
+      MainObject(id, stats).setPos(pos)
     }
 
     def parseClassDecl(): ClassDecl = {
+
+      val pos = currentToken
+
       eat(CLASS)
       val id = parseIdentifier
 
@@ -109,20 +118,23 @@ object Parser extends Pipeline[Iterator[Token], Program] {
       val methods = parseMethodDeclList
       eat(RBRACE)
 
-      ClassDecl(id, parent, vars, methods)
+      ClassDecl(id, parent, vars, methods).setPos(pos)
     }
 
     def parseListClassDecl: List[ClassDecl] =
       parseListWhile[ClassDecl](Set(CLASS), parseClassDecl, None)(List())
 
     def parseVarDecl(): VarDecl = {
+
+      val pos = currentToken
+
       eat(VAR)
       val id = parseIdentifier
       eat(COLON)
       val tpe = parseType
       eat(SEMICOLON)
 
-      VarDecl(tpe, id)
+      VarDecl(tpe, id).setPos(pos)
     }
 
     def parseVarDeclList: List[VarDecl] =
@@ -130,6 +142,9 @@ object Parser extends Pipeline[Iterator[Token], Program] {
         None)(List())
 
     def parseMethodDecl(): MethodDecl = {
+
+      val pos = currentToken
+
       eat(DEF)
       val id = parseIdentifier
       eat(LPAREN)
@@ -146,18 +161,21 @@ object Parser extends Pipeline[Iterator[Token], Program] {
       eat(SEMICOLON)
       eat(RBRACE)
 
-      MethodDecl(retType, id, args, vars, stats, retExpr)
+      MethodDecl(retType, id, args, vars, stats, retExpr).setPos(pos)
     }
 
     def parseMethodDeclList: List[MethodDecl] =
       parseListWhile[MethodDecl](Set(DEF), parseMethodDecl, None)(List())
 
     def parseFormal(): Formal = {
+
+      val pos = currentToken
+
       val id = parseIdentifier
       eat(COLON)
       val tpe = parseType
 
-      Formal(tpe, id)
+      Formal(tpe, id).setPos(pos)
     }
 
     def parseFormalList: List[Formal] =
@@ -167,29 +185,43 @@ object Parser extends Pipeline[Iterator[Token], Program] {
     def parseType: TypeTree = types(currentToken.kind)()
 
     def parseIntArrayType(): IntArrayType = {
+
+      val pos = currentToken
+
       eat(LBRACKET)
       eat(RBRACKET)
 
-      IntArrayType()
+      IntArrayType().setPos(pos)
     }
     def parseBooleanType(): BooleanType = {
+
+      val pos = currentToken
+
       eat(BOOLEAN)
 
-      BooleanType()
+      BooleanType().setPos(pos)
     }
 
     def parseIntType(): TypeTree = {
+
+      val pos = currentToken
+
       eat(INT)
-      currentToken.kind match {
+      val tt = currentToken.kind match {
         case LBRACKET => parseIntArrayType()
         case _ => IntType()
       }
+
+      tt.setPos(pos)
     }
 
     def parseStringType(): StringType = {
+
+      val pos = currentToken
+
       eat(STRING)
 
-      StringType()
+      StringType().setPos(pos)
     }
 
     def parseStatTree: StatTree =
@@ -203,14 +235,20 @@ object Parser extends Pipeline[Iterator[Token], Program] {
                                () => parseStatTree, None)(List())
 
     def parseBlock(): Block = {
+
+      val pos = currentToken
+
       eat(LBRACE)
       val stats = parseStatTreeList
       eat(RBRACE)
 
-      Block(stats)
+      Block(stats).setPos(pos)
     }
 
     def parseIf(): If = {
+
+      val pos = currentToken
+
       eat(IF)
       eat(LPAREN)
       val expr = parseExprTree()
@@ -224,30 +262,37 @@ object Parser extends Pipeline[Iterator[Token], Program] {
         case _    => None
       }
 
-      If(expr, thn, els)
+      If(expr, thn, els).setPos(pos)
     }
 
     def parseWhile(): While = {
+
+      val pos = currentToken
+
       eat(WHILE)
       eat(LPAREN)
       val expr = parseExprTree()
       eat(RPAREN)
       val stat = parseStatTree
 
-      While(expr, stat)
+      While(expr, stat).setPos(pos)
     }
 
     def parsePrintln(): Println = {
-        eat(PRINTLN)
-        eat(LPAREN)
-        val expr = parseExprTree()
-        eat(RPAREN)
-        eat(SEMICOLON)
 
-        Println(expr)
+      val pos = currentToken
+
+      eat(PRINTLN)
+      eat(LPAREN)
+      val expr = parseExprTree()
+      eat(RPAREN)
+      eat(SEMICOLON)
+
+      Println(expr).setPos(pos)
     }
 
     def parseTreeID(): StatTree = {
+
       val id = parseIdentifier
       statTreeID.get(currentToken.kind) match  {
         case Some(f) => f(id)
@@ -256,14 +301,20 @@ object Parser extends Pipeline[Iterator[Token], Program] {
     }
 
     def parseAssign(id: Identifier): Assign = {
+
+      val pos = currentToken
+
       eat(EQSIGN)
       val expr = parseExprTree()
       eat(SEMICOLON)
 
-      Assign(id,expr)
+      Assign(id,expr).setPos(pos)
     }
 
     def parseArrayAssign(id: Identifier): ArrayAssign = {
+
+      val pos = currentToken
+
       eat(LBRACKET)
       val index = parseExprTree()
       eat(RBRACKET)
@@ -271,7 +322,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
       val expr = parseExprTree()
       eat(SEMICOLON)
 
-      ArrayAssign(id, index, expr)
+      ArrayAssign(id, index, expr).setPos(pos)
     }
 
     def parseExprTree(): ExprTree =
@@ -300,31 +351,45 @@ object Parser extends Pipeline[Iterator[Token], Program] {
       }
 
     def parseExprTreeInfinite(obj: ExprTree): ExprTree =
-      exprInfinite.get(currentToken.kind) match {
-        case Some(f) => f(obj)
-        case None => expectedS(exprInfinite.keySet)
-      }
+      parseExprTreeInfiniteHelper(obj, tokenOrder.length)
 
-    def parseArrayRead(lhs: ExprTree) = {
+    def parseExprTreeInfiniteLevel(c: TokenKind): Int =
+      tokenOrder.indexWhere(_.contains(c))
+
+    def parseExprTreeInfiniteHelper(obj: ExprTree, ll: Int): ExprTree = {
+
+      val c = currentToken.kind
+
+      if(c == TIMES) {
+        eat(TIMES)
+        Times(obj, parseExprTree)
+      } else if(c == PLUS) {
+        eat(PLUS)
+        Plus(obj, parseExprTree)
+      } else obj
+    }
+
+    def parseArrayRead(lhs: ExprTree, l: Int) = {
       eat(LBRACKET)
       val rhs = parseExprTree()
       eat(RBRACKET)
 
-      ArrayRead(lhs,rhs)
+      ArrayRead(lhs,rhs).setPos(lhs)
     }
 
-    def parseDot(obj: ExprTree): ExprTree = {
+    def parseDot(obj: ExprTree, l: Int): ExprTree = {
       eat(DOT)
       exprDot.get(currentToken.kind) match {
-        case Some(f) => f(obj)
+        case Some(f) => f(obj).setPos(obj)
         case None => expectedS(exprDot.keySet)
       }
     }
 
     def parseArrayLength(array: ExprTree): ArrayLength = {
+
       eat(LENGTH)
 
-      ArrayLength(array)
+      ArrayLength(array).setPos(array)
     }
 
     def parseMethodCall(obj: ExprTree) = {
@@ -333,86 +398,114 @@ object Parser extends Pipeline[Iterator[Token], Program] {
       val args = parseMethodCallArgs
       eat(RPAREN)
 
-      MethodCall(obj,meth,args)
+      MethodCall(obj,meth,args).setPos(obj)
     }
 
     def parseMethodCallArgs: List[ExprTree] =
       parseListWhile[ExprTree](expr, parseExprTree, Some(COMMA))(List())
 
     def parseIntLit(): IntLit = {
+
+      val pos = currentToken
+
       val value = if(currentToken.kind == INTLITKIND) {
         val token = currentToken.asInstanceOf[INTLIT] // TODO avoid casting
         token.value
       } else expected(INTLITKIND)
       eat(INTLITKIND)
-      IntLit(value)
+      IntLit(value).setPos(pos)
     }
 
     def parseStrLit(): StringLit = {
+
+      val pos = currentToken
+
       val value = if(currentToken.kind == STRLITKIND) {
         val token = currentToken.asInstanceOf[STRLIT] // TODO avoid casting
         token.value
       } else expected(STRLITKIND)
       eat(STRLITKIND)
-      StringLit(value)
+      StringLit(value).setPos(pos)
     }
 
     def parseTrue(): True = {
+
+      val pos = currentToken
+
       eat(TRUE)
 
-      True()
+      True().setPos(pos)
     }
 
     def parseFalse(): False = {
+
+      val pos = currentToken
+
       eat(FALSE)
 
-      False()
+      False().setPos(pos)
     }
 
     def parseIdentifier(): Identifier = {
+
+      val pos = currentToken
+
       val value = if(currentToken.kind == IDKIND) {
         val token = currentToken.asInstanceOf[ID] // TODO avoid casting
         token.value
       } else expected(IDKIND)
       eat(IDKIND)
-      Identifier(value)
+      Identifier(value).setPos(pos)
     }
 
     def parseThis(): This = {
+
+      val pos = currentToken
+
       eat(THIS)
 
-      This()
+      This().setPos(pos)
     }
 
     def parseNewIntArray(): NewIntArray = {
+
+      val pos = currentToken
+
       eat(INT)
       eat(LBRACKET)
       val size = parseExprTree()
       eat(RBRACKET)
 
-      NewIntArray(size)
+      NewIntArray(size).setPos(pos)
     }
 
     def parseNew(): ExprTree = {
+
+      val pos = currentToken
+
       eat(NEW)
-      if(currentToken.kind == INT) parseNewIntArray
+      if(currentToken.kind == INT) parseNewIntArray.setPos(pos)
       else {
         val tpe = parseIdentifier
         eat(LPAREN)
         eat(RPAREN)
 
-        New(tpe)
+        New(tpe).setPos(pos)
       }
     }
 
     def parseNot(): Not = {
+
+      val pos = currentToken
+
       eat(BANG)
       val expr = parseExprTree()
 
-      Not(expr)
+      Not(expr).setPos(pos)
     }
 
     def parseParenthesis(): ExprTree = {
+
       eat(LPAREN)
       val expr = parseExprTree()
       eat(RPAREN)
@@ -422,18 +515,33 @@ object Parser extends Pipeline[Iterator[Token], Program] {
 
     // Set
 
-    def parseExpr(kind: TokenKind): ((ExprTree) => ExprTree) =
-      (lhs) => {
+    def parseExpr(kind: TokenKind): ((ExprTree,Int) => ExprTree) =
+      (lhs,ll) => {
         eat(kind)
-        val rhs = parseExprTree()
+
+        val pos = currentToken
+
+        val lr = parseExprTreeInfiniteLevel(kind)
+        val rhs = parseExprTreeInfiniteHelper(lhs, lr)
 
         tokensExpr.get(kind) match {
-          case Some(t) => t(lhs,rhs)
+          case Some(t) => t(lhs,rhs).setPos(pos)
           case None => expectedS(tokensExpr.keySet)
         }
       }
 
-    lazy val exprInfinite: Map[TokenKind,(ExprTree) => ExprTree] = Map(
+    lazy val tokenOrder: List[Set[TokenKind]] = List(
+      Set(TIMES,DIV),
+      Set(MINUS,PLUS),
+      Set(EQUALS,LESSTHAN),
+      Set(AND),
+      Set(OR)
+    )
+
+    lazy val exprOrder: List[Set[(ExprTree,ExprTree) => ExprTree]] =
+      tokenOrder.map(_.map(tokensExpr(_)))
+
+    lazy val exprInfinite: Map[TokenKind,(ExprTree,Int) => ExprTree] = Map(
       AND      -> parseExpr(AND),
       OR       -> parseExpr(OR),
       EQUALS   -> parseExpr(EQUALS),
