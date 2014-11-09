@@ -351,7 +351,10 @@ object Parser extends Pipeline[Iterator[Token], Program] {
       }
 
     def parseExprTreeInfinite(obj: ExprTree): ExprTree =
-      parseExprTreeInfiniteHelper(obj, tokenOrder.length)
+      exprInfinite.get(currentToken.kind) match {
+        case Some(f) => f(obj).setPos(obj)
+        case None => expectedS(exprInfinite.keySet)
+      }
 
     def parseExprTreeInfiniteLevel(c: TokenKind): Int =
       tokenOrder.indexWhere(_.contains(c))
@@ -369,7 +372,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
       } else obj
     }
 
-    def parseArrayRead(lhs: ExprTree, l: Int) = {
+    def parseArrayRead(lhs: ExprTree) = {
       eat(LBRACKET)
       val rhs = parseExprTree()
       eat(RBRACKET)
@@ -377,7 +380,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
       ArrayRead(lhs,rhs).setPos(lhs)
     }
 
-    def parseDot(obj: ExprTree, l: Int): ExprTree = {
+    def parseDot(obj: ExprTree): ExprTree = {
       eat(DOT)
       exprDot.get(currentToken.kind) match {
         case Some(f) => f(obj).setPos(obj)
@@ -515,14 +518,13 @@ object Parser extends Pipeline[Iterator[Token], Program] {
 
     // Set
 
-    def parseExpr(kind: TokenKind): ((ExprTree,Int) => ExprTree) =
-      (lhs,ll) => {
+    def parseExpr(kind: TokenKind): (ExprTree => ExprTree) =
+      (lhs) => {
         eat(kind)
 
         val pos = currentToken
 
-        val lr = parseExprTreeInfiniteLevel(kind)
-        val rhs = parseExprTreeInfiniteHelper(lhs, lr)
+        val rhs = parseExprTree()
 
         tokensExpr.get(kind) match {
           case Some(t) => t(lhs,rhs).setPos(pos)
@@ -541,7 +543,7 @@ object Parser extends Pipeline[Iterator[Token], Program] {
     lazy val exprOrder: List[Set[(ExprTree,ExprTree) => ExprTree]] =
       tokenOrder.map(_.map(tokensExpr(_)))
 
-    lazy val exprInfinite: Map[TokenKind,(ExprTree,Int) => ExprTree] = Map(
+    lazy val exprInfinite: Map[TokenKind,ExprTree => ExprTree] = Map(
       AND      -> parseExpr(AND),
       OR       -> parseExpr(OR),
       EQUALS   -> parseExpr(EQUALS),
