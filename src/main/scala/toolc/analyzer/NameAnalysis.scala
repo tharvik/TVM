@@ -4,6 +4,7 @@ package analyzer
 import utils._
 import ast.Trees._
 import Symbols._
+import scala.annotation.tailrec
 
 object NameAnalysis extends Pipeline[Program, Program] {
 
@@ -25,27 +26,24 @@ object NameAnalysis extends Pipeline[Program, Program] {
 
     def orderClasses(list: List[ClassDecl]): List[ClassDecl] = {
 
-      var l = list
-      var acc: List[ClassDecl] = List()
+      @tailrec
+      def orderClassesAcc(acc: List[ClassDecl], list: List[ClassDecl]): List[ClassDecl] = {
 
-      def parentAlreadyThere(c: ClassDecl): Boolean = acc.contains(c)
-      def getParent(id: Identifier): ClassDecl = list.filter(_.id == id).head
+        def parentAlreadyThere(c: ClassDecl): Boolean = acc.contains(c)
+        def getParent(id: Identifier): ClassDecl =
+          acc.union(list).filter(_.id == id).head
 
-      while (l.nonEmpty) {
-
-        var next_run: List[ClassDecl] = List()
-
-        for (c <- l) {
-
+        if (list isEmpty) acc
+        else {
+          val c = list.head
           if (c.parent.isDefined && !parentAlreadyThere(getParent(c.parent.get)))
-            next_run = c :: next_run
-          else acc = c :: acc
+            orderClassesAcc(acc, list.tail :+ c)
+          else
+            orderClassesAcc(c :: acc, list.tail)
         }
-
-        l = next_run
       }
 
-      acc.reverse
+      orderClassesAcc(List(), list).reverse
     }
 
     val global = new GlobalScope
