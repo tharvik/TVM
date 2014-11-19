@@ -13,7 +13,6 @@ object Parser extends Pipeline[Iterator[Token], Program] {
   def run(ctx: Context)(tokens: Iterator[Token]): Program = {
     import ctx.reporter._
 
-
     // Store the current token, as read from the lexer.
     var currentToken: Token = new Token(BAD)
 
