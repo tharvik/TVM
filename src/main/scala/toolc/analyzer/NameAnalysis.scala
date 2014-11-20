@@ -18,6 +18,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
   private val classNotDef = "a class name is used as a symbol (as parent class or type, for instance) but is not declared"
   private val idNotDef = "an identifier is used as a variable but is not declared"
   private val classCycle = "the inheritance graph has a cycle (eg. “class A extends B {} class B extends A {}”)"
+  private val unusedVar = "declared variable is never accessed (read or written)"
 
   private val main_name = "Main"
 
@@ -136,8 +137,14 @@ object NameAnalysis extends Pipeline[Program, Program] {
 
       val s = new MethodSymbol(m.id.value, scope)
 
-      val old = scope lookupMethod (name)
-      if (old.isDefined) old.get.overridden = Some(s)
+      val old = scope.lookupMethod(name)
+      if (old.isDefined) {
+        if (old.get.params.size == m.args.size)
+          old.get.overridden = Some(s)
+        else
+          ctx.reporter.error(methodOverload, s)
+
+      }
 
       m.setSymbol(s)
       parseIdentifier(s, m.id)
@@ -151,6 +158,9 @@ object NameAnalysis extends Pipeline[Program, Program] {
       parseExpr(s, m.retExpr)
 
       parseType(m.retType)
+
+      if (!s.members.filter(!_._2.used).isEmpty)
+        ctx.reporter.warning(unusedVar, m)
 
       s
     }
@@ -238,8 +248,10 @@ object NameAnalysis extends Pipeline[Program, Program] {
         val vs = scope match {
           case w: MethodSymbol => {
             val o = w.lookupVar(name)
-            if (o.isDefined) o.get
-            else ctx.reporter.fatal(idNotDef, x)
+            if (o.isDefined) {
+              o.get.used = true
+              o.get
+            } else ctx.reporter.fatal(idNotDef, x)
 
           }
 
