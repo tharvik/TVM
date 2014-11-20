@@ -124,13 +124,17 @@ object NameAnalysis extends Pipeline[Program, Program] {
       val name = m.id.value
 
       val args_list = m.args.map(_.id.value)
+      val vars_list = m.vars.map(_.id.value)
       val args_name = args_list.toSet
-      val vars_name = m.vars.map(_.id.value).toSet
+      val vars_name = vars_list.toSet
 
       if (!args_name.intersect(vars_name).isEmpty)
         ctx.reporter.error(methodArgVarRedef, m)
 
       if (args_list.size != args_name.size)
+        ctx.reporter.error(methodArgRedef, m)
+
+      if (vars_list.size != vars_name.size)
         ctx.reporter.error(methodArgRedef, m)
 
       val s = new MethodSymbol(m.id.value, scope)
