@@ -20,8 +20,6 @@ object NameAnalysis extends Pipeline[Program, Program] {
   private val classCycle = "the inheritance graph has a cycle (eg. “class A extends B {} class B extends A {}”)"
   private val unusedVar = "declared variable is never accessed (read or written)"
 
-  private val main_name = "Main"
-
   def run(ctx: Context)(prog: Program): Program = {
     import ctx.reporter._
 
@@ -74,7 +72,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
     }
 
     def parseMainObject(main: MainObject) = {
-      val s = new ClassSymbol(main_name)
+      val s = new ClassSymbol(main.id.value)
       global.mainClass = s
       main.setSymbol(s)
 
@@ -86,7 +84,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
 
       val name = c.id.value
 
-      if (global.lookupClass(main_name).isDefined)
+      if (global.lookupClass(global.mainClass.name).isDefined)
         ctx.reporter.error(classDefMain, c)
 
       val w = global lookupClass (name)
