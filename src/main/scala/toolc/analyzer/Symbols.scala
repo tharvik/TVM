@@ -17,7 +17,7 @@ object Symbols {
       case None => sys.error("Accessing undefined symbol.")
     }
 
-    def isDefined = _sym isDefined
+    def isDefined = _sym.isDefined
   }
 
   sealed abstract class Symbol extends Positioned {
@@ -40,14 +40,14 @@ object Symbols {
     var classes = Map[String, ClassSymbol]()
 
     def lookupClass(n: String): Option[ClassSymbol] =
-      classes get n
+      classes.get(n)
   }
 
   class ClassSymbol(val name: String) extends Symbol {
     var parent: Option[ClassSymbol] = None
     var methods = Map[String, MethodSymbol]()
     var members = Map[String, VariableSymbol]()
-    var totaly_defined = true
+    var totaly_defined = false
 
     def lookupMethod(n: String): Option[MethodSymbol] =
       if (parent.isDefined && parent.get.lookupMethod(n).isDefined)
@@ -55,8 +55,8 @@ object Symbols {
       else methods get n
 
     def lookupVar(n: String): Option[VariableSymbol] =
-      if (members get (n) isDefined) members get n
-      else if (parent isDefined) parent.get lookupVar(n)
+      if (members.get(n).isDefined) members.get(n)
+      else if (parent.isDefined) parent.get.lookupVar(n)
       else None
 
   }
@@ -68,9 +68,10 @@ object Symbols {
     var overridden: Option[MethodSymbol] = None
 
     def lookupVar(n: String): Option[VariableSymbol] =
-      if (params get n isDefined) params get n
-      else if (members get n isDefined) members get n
-      else classSymbol lookupVar (n)
+      if (params.get(n).isDefined) params.get(n)
+      else if (members.get(n).isDefined) members.get(n)
+      else if (argList.exists(_.name == n)) Some(argList.filter(_.name == n).head)
+      else classSymbol.lookupVar(n)
 
   }
 

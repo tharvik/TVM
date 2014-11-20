@@ -13,10 +13,10 @@ object NameAnalysis extends Pipeline[Program, Program] {
   private val varRedef = "a variable is defined more than once"
   private val memberOverload = "a class member is overloaded (forbidden in Tool)"
   private val methodOverload = "a method is overloaded (forbidden in Tool)"
-  private val methodArgRedef = "a method argument is shadowed by a local variable declaration (forbidden in Java, and we follow this convention)"
-  private val methodRedef = "two method arguments have the same name"
+  private val methodArgVarRedef = "a method argument is shadowed by a local variable declaration (forbidden in Java, and we follow this convention)"
+  private val methodArgRedef = "two method arguments have the same name"
   private val classNotDef = "a class name is used as a symbol (as parent class or type, for instance) but is not declared"
-  private val idNotDef = "an identifier is used as a variable but not is declared"
+  private val idNotDef = "an identifier is used as a variable but is not declared"
   private val classCycle = "the inheritance graph has a cycle (eg. “class A extends B {} class B extends A {}”)"
 
   private val main_name = "Main"
@@ -27,26 +27,44 @@ object NameAnalysis extends Pipeline[Program, Program] {
     def orderClasses(list: List[ClassDecl]): List[ClassDecl] = {
 
       @tailrec
-      def orderClassesAcc(acc: List[ClassDecl], list: List[ClassDecl]): List[ClassDecl] = {
+      def orderClassesAcc(acc: List[ClassDecl], list: List[ClassDecl], last_update: Int): List[ClassDecl] = {
 
         def parentAlreadyThere(c: ClassDecl): Boolean = acc.contains(c)
-        def getParent(id: Identifier): ClassDecl =
-          acc.union(list).filter(_.id == id).head
+        def getParent(id: Identifier): ClassDecl = {
+          val filt = acc.union(list).filter(_.id == id)
+          if (filt.isEmpty)
+            ctx.reporter.fatal(classNotDef, id)
+          else filt.head
+        }
 
-        if (list isEmpty) acc
+        if (list.isEmpty) acc
+        else if (last_update == list.size) ctx.reporter.fatal(classCycle, list.head)
         else {
           val c = list.head
           if (c.parent.isDefined && !parentAlreadyThere(getParent(c.parent.get)))
-            orderClassesAcc(acc, list.tail :+ c)
+            orderClassesAcc(acc, list.tail :+ c, last_update + 1)
           else
-            orderClassesAcc(c :: acc, list.tail)
+            orderClassesAcc(c :: acc, list.tail, 0)
         }
       }
 
-      orderClassesAcc(List(), list).reverse
+      orderClassesAcc(List(), list, 0).reverse
     }
 
     val global = new GlobalScope
+
+    // return true if already defined
+    def getCreateClass(name: String): ClassSymbol = {
+      val g = global.lookupClass(name)
+
+      if (g.isDefined) {
+        g.get
+      } else {
+        val s = new ClassSymbol(name)
+        global.classes += (name -> s)
+        s
+      }
+    }
 
     def parseProgram(prog: Program) = {
       parseMainObject(prog.main)
@@ -74,11 +92,13 @@ object NameAnalysis extends Pipeline[Program, Program] {
       if (w.isDefined && w.get.totaly_defined)
         ctx.reporter.error(classRedef, c)
 
+      val meth_name = c.methods.map(_.id)
+      if (meth_name.toSet.size != meth_name.size)
+        ctx.reporter.error(methodOverload, c)
+
       // create new class if needed
-      val cs =
-        if (w isDefined) w get
-        else new ClassSymbol(name)
-      global.classes += (name -> cs)
+      val cs = getCreateClass(name)
+      cs.totaly_defined = true
       c.setSymbol(cs)
       parseIdentifier(cs, c.id)
 
@@ -86,18 +106,10 @@ object NameAnalysis extends Pipeline[Program, Program] {
       if (c.parent.isDefined) {
 
         val ident = c.parent.get.value
+        val ps = getCreateClass(ident)
 
-        val g = global.lookupClass(ident)
-        val ps =
-          if (g.isDefined) {
-            g get
-          } else {
-            val s = new ClassSymbol(ident)
-            global.classes += (ident -> s)
-            s
-          }
-
-        ps.totaly_defined = false
+        if (c.vars.exists(x => ps.lookupVar(x.id.value).isDefined))
+          ctx.reporter.error(memberOverload, c)
 
         c.parent.get.setSymbol(ps)
         cs.parent = Some(ps)
@@ -112,21 +124,47 @@ object NameAnalysis extends Pipeline[Program, Program] {
 
       val name = m.id.value
 
+      val args_list = m.args.map(_.id.value)
+      val args_name = args_list.toSet
+      val vars_name = m.vars.map(_.id.value).toSet
+
+      if (!args_name.intersect(vars_name).isEmpty)
+        ctx.reporter.error(methodArgVarRedef, m)
+
+      if (args_list.size != args_name.size)
+        ctx.reporter.error(methodArgRedef, m)
+
       val s = new MethodSymbol(m.id.value, scope)
 
       val old = scope lookupMethod (name)
-      if (old isDefined) old.get.overridden = Some(s)
+      if (old.isDefined) old.get.overridden = Some(s)
 
       m.setSymbol(s)
       parseIdentifier(s, m.id)
 
-      for (v <- m.vars) s.members += (v.id.value -> parseVar(s, v))
       val l = m.args.foldLeft(List[VariableSymbol]())((a, b) => parseFormal(s, b) :: a)
       s.argList = l.reverse
+
+      for (v <- m.vars) s.members += (v.id.value -> parseVar(s, v))
+
       parseStats(s, m.stats)
       parseExpr(s, m.retExpr)
 
+      parseType(m.retType)
+
       s
+    }
+
+    def parseType(t: TypeTree) = {
+      t match {
+        case x: Identifier => {
+          val name = x.value
+          val i = getCreateClass(name)
+          x.setSymbol(i)
+        }
+
+        case _ => {}
+      }
     }
 
     def parseBlock(scope: MethodSymbol, b: Block) =
@@ -137,21 +175,28 @@ object NameAnalysis extends Pipeline[Program, Program] {
 
     def parseStat(scope: Symbol, t: StatTree): Unit = {
       t match {
-        case x: Block => parseStats(scope, x.stats)
-        case x: Println => parseExpr(scope, x.expr)
+        case x: Block =>
+          parseStats(scope, x.stats)
+
+        case x: Println =>
+          parseExpr(scope, x.expr)
+
         case x: Assign => {
-          parseIdentifier(scope, x.id)
           parseExpr(scope, x.id)
+          parseExpr(scope, x.expr)
         }
+
         case x: While => {
           parseExpr(scope, x.expr)
           parseStat(scope, x.stat)
         }
+
         case x: ArrayAssign => {
           parseExpr(scope, x.expr)
           parseIdentifier(scope, x.id)
           parseExpr(scope, x.index)
         }
+
         case x: If => {
           parseExpr(scope, x.expr)
           if (x.els.isDefined) parseStat(scope, x.els.get)
@@ -164,12 +209,13 @@ object NameAnalysis extends Pipeline[Program, Program] {
       for (e <- l) parseExpr(scope, e)
 
     def parseExpr(scope: Symbol, e: ExprTree): Unit = e match {
+
       case x: New => {
         val name = x.tpe.value
 
         val i = global.lookupClass(name)
         val cs =
-          if (i isDefined) i get
+          if (i.isDefined) i.get
           else {
             val s = new ClassSymbol(name)
             global.classes += (name -> s)
@@ -179,14 +225,12 @@ object NameAnalysis extends Pipeline[Program, Program] {
 
         parseIdentifier(cs, x.tpe)
       }
+
       case x: MethodCall => {
-        scope match {
-          case w: ClassSymbol => {
-            parseExpr(scope, x.obj)
-            parseExprs(scope, x.args)
-          }
-        }
+        parseExpr(scope, x.obj)
+        parseExprs(scope, x.args)
       }
+
       case x: Identifier => {
 
         val name = x.value
@@ -194,29 +238,82 @@ object NameAnalysis extends Pipeline[Program, Program] {
         val vs = scope match {
           case w: MethodSymbol => {
             val o = w.lookupVar(name)
-            if (o isDefined) o get
-            else new VariableSymbol(x.value)
+            if (o.isDefined) o.get
+            else ctx.reporter.fatal(idNotDef, x)
+
           }
 
-          case w: ClassSymbol => {
-            val o = w.lookupVar(name)
-            if (o isDefined) o get
-            else new VariableSymbol(x.value)
-          }
+          case _ => ??? // may not be needed
         }
 
         parseIdentifier(vs, x)
       }
+
       case x: And => {
         parseExpr(scope, x.lhs)
         parseExpr(scope, x.rhs)
       }
+
       case x: ArrayRead => {
         parseExpr(scope, x.arr)
         parseExpr(scope, x.index)
       }
 
-      case x: IntLit => {}
+      case x: ArrayLength =>
+        parseExpr(scope, x.arr)
+
+      case x: Div => {
+        parseExpr(scope, x.lhs)
+        parseExpr(scope, x.rhs)
+      }
+
+      case x: Equals => {
+        parseExpr(scope, x.lhs)
+        parseExpr(scope, x.rhs)
+      }
+
+      case x: LessThan => {
+        parseExpr(scope, x.lhs)
+        parseExpr(scope, x.rhs)
+      }
+
+      case x: Minus => {
+        parseExpr(scope, x.lhs)
+        parseExpr(scope, x.rhs)
+      }
+
+      case x: Or => {
+        parseExpr(scope, x.lhs)
+        parseExpr(scope, x.rhs)
+      }
+
+      case x: Plus => {
+        parseExpr(scope, x.lhs)
+        parseExpr(scope, x.rhs)
+      }
+
+      case x: Times => {
+        parseExpr(scope, x.lhs)
+        parseExpr(scope, x.rhs)
+      }
+
+      case x: NewIntArray => {
+        parseExpr(scope, x.size)
+      }
+
+      case x: Not => {
+        parseExpr(scope, x.expr)
+      }
+
+      case x: This => {
+
+        scope match {
+          case w: MethodSymbol => x.setSymbol(w.classSymbol)
+          case _ => ??? // should not happen
+        }
+      }
+
+      case _ => {}
     }
 
     def parseVar(scope: Symbol, v: VarDecl): VariableSymbol = {
@@ -226,20 +323,27 @@ object NameAnalysis extends Pipeline[Program, Program] {
 
       scope match {
         case x: ClassSymbol => {
+
+          if (x.members.contains(name))
+            ctx.reporter.error(varRedef, v)
+
           val i = x.lookupVar(name)
-          if (i isDefined) x.members += (name -> i.get)
+          if (i.isDefined) x.members += (name -> i.get)
           else x.members += (name -> s)
         }
 
         case x: MethodSymbol => {
           val i = x.lookupVar(name)
-          if (i isDefined) x.members += (name -> i.get)
+          if (i.isDefined) x.members += (name -> i.get)
           else x.members += (name -> s)
         }
+
+        case x: VariableSymbol => ??? // may never happen
       }
 
       v.setSymbol(s)
       parseIdentifier(s, v.id)
+      parseType(v.tpe)
 
       s
     }
@@ -248,7 +352,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
       val s = new VariableSymbol(f.id.value)
 
       f.setSymbol(s)
-      parseIdentifier(scope, f.id)
+      parseIdentifier(s, f.id)
 
       s
     }

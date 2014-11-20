@@ -31,7 +31,7 @@ object Printer {
 
   def show[E <: Symbol](e: Symbolic[E]) = {
     val s =
-      if(e isDefined) e.getSymbol.id
+      if(e.isDefined) e.getSymbol.id
       else idu
     ids + s
   }
