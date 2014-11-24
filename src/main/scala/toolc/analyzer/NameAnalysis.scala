@@ -84,7 +84,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
 
       val name = c.id.value
 
-      if (global.lookupClass(global.mainClass.name).isDefined)
+      if (c.id.value == global.mainClass.name)
         ctx.reporter.error(classDefMain, c)
 
       val w = global lookupClass (name)
