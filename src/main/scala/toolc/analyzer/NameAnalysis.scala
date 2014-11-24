@@ -141,7 +141,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
 
       val old = scope.lookupMethod(name)
       if (old.isDefined) {
-        if (old.get.params.size == m.args.size)
+        if (old.get.argList.size == m.args.size)
           old.get.overridden = Some(s)
         else
           ctx.reporter.error(methodOverload, s)
