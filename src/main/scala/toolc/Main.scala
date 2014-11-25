@@ -25,12 +25,13 @@ object Main {
   def main(args: Array[String]) {
     val ctx = processOptions(args)
 
-    val pipeline = Lexer andThen
-                   Parser andThen
+    val dump = ASTDumper.apply(args)
+
+    val pipeline = ASTDumpParser andThen
                    NameAnalysis andThen
                    TypeChecking
 
-    val result = pipeline.run(ctx)(ctx.file)
+    val result = pipeline.run(ctx)(dump)
 
     ctx.reporter.terminateIfErrors
 
