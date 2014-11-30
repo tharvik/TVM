@@ -205,7 +205,11 @@ object NameAnalysis extends Pipeline[Program, Program] {
 
         case x: ArrayAssign => {
           parseExpr(scope, x.expr)
-          parseIdentifier(scope, x.id)
+          val v = scope match {
+            case y: MethodSymbol => y.lookupVar(x.id.value).get
+            case _ => ???
+          }
+          x.id.setSymbol(v)
           parseExpr(scope, x.index)
         }
 

@@ -22,7 +22,7 @@ object TypeChecking extends Pipeline[Program, Program] {
         tpe
       } else {
         if (!expected.exists(e => tpe.isSubTypeOf(e))) {
-          //          error("Type error: Expected: " + expected.toList.mkString(" or ") + ", found: " + tpe + " >> " + expr, expr)
+          error("Type error: Expected: " + expected.toList.mkString(" or ") + ", found: " + tpe + " >> " + expr, expr)
           expected.head
         } else {
           tpe
@@ -77,8 +77,6 @@ object TypeChecking extends Pipeline[Program, Program] {
         case ArrayRead(arr: ExprTree, index: ExprTree) => {
           tcExpr(arr, TIntArray)
           tcExpr(index, TInt)
-
-          TInt
         }
 
         case ArrayLength(arr: ExprTree) => {
