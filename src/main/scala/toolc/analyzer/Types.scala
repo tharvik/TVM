@@ -27,18 +27,53 @@ object Types {
     override def toString = "[untyped]"
   }
 
+  lazy val typeToStr: Map[Type, String] = Map(
+    TInt -> "int",
+    TBoolean -> "boolean",
+    TIntArray -> "int[array]",
+    TString -> "string")
+
   case object TInt extends Type {
     override def isSubTypeOf(tpe: Type): Boolean = tpe match {
       case TInt => true
       case _ => false
     }
-    override def toString = "int"
+    override def toString = typeToStr(TInt)
   }
 
   // TODO: Complete by creating necessary types
 
+  case object TBoolean extends Type {
+    override def isSubTypeOf(tpe: Type): Boolean = tpe match {
+      case TBoolean => true
+      case _ => false
+    }
+    override def toString = typeToStr(TBoolean)
+  }
+
+  case object TIntArray extends Type {
+    override def isSubTypeOf(tpe: Type): Boolean = tpe match {
+      case TIntArray => true
+      case _ => false
+    }
+    override def toString = typeToStr(TIntArray)
+  }
+
+  case object TString extends Type {
+    override def isSubTypeOf(tpe: Type): Boolean = tpe match {
+      case TString => true
+      case _ => false
+    }
+    override def toString = typeToStr(TString)
+  }
+
   case class TObject(classSymbol: ClassSymbol) extends Type {
-    override def isSubTypeOf(tpe: Type): Boolean = ???
+    override def isSubTypeOf(tpe: Type): Boolean = tpe match {
+      case TObject(x) => classSymbol == x
+      case _ =>
+        if (classSymbol.parent.isDefined) classSymbol.parent.get.getType.isSubTypeOf(tpe)
+        else TAnyObject.isSubTypeOf(tpe)
+    }
     override def toString = classSymbol.name
   }
 

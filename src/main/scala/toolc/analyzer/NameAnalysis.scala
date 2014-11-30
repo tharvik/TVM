@@ -20,35 +20,35 @@ object NameAnalysis extends Pipeline[Program, Program] {
   private val classCycle = "the inheritance graph has a cycle (eg. “class A extends B {} class B extends A {}”)"
   private val unusedVar = "declared variable is never accessed (read or written)"
 
-  def run(ctx: Context)(prog: Program): Program = {
-    import ctx.reporter._
+  def orderClasses(ctx: Context, list: List[ClassDecl]): List[ClassDecl] = {
 
-    def orderClasses(list: List[ClassDecl]): List[ClassDecl] = {
+    @tailrec
+    def orderClassesAcc(acc: List[ClassDecl], list: List[ClassDecl], last_update: Int): List[ClassDecl] = {
 
-      @tailrec
-      def orderClassesAcc(acc: List[ClassDecl], list: List[ClassDecl], last_update: Int): List[ClassDecl] = {
-
-        def parentAlreadyThere(c: ClassDecl): Boolean = acc.contains(c)
-        def getParent(id: Identifier): ClassDecl = {
-          val filt = acc.union(list).filter(_.id == id)
-          if (filt.isEmpty)
-            ctx.reporter.fatal(classNotDef, id)
-          else filt.head
-        }
-
-        if (list.isEmpty) acc
-        else if (last_update == list.size) ctx.reporter.fatal(classCycle, list.head)
-        else {
-          val c = list.head
-          if (c.parent.isDefined && !parentAlreadyThere(getParent(c.parent.get)))
-            orderClassesAcc(acc, list.tail :+ c, last_update + 1)
-          else
-            orderClassesAcc(c :: acc, list.tail, 0)
-        }
+      def parentAlreadyThere(c: ClassDecl): Boolean = acc.contains(c)
+      def getParent(id: Identifier): ClassDecl = {
+        val filt = acc.union(list).filter(_.id == id)
+        if (filt.isEmpty)
+          ctx.reporter.fatal(classNotDef, id)
+        else filt.head
       }
 
-      orderClassesAcc(List(), list, 0).reverse
+      if (list.isEmpty) acc
+      else if (last_update == list.size) ctx.reporter.fatal(classCycle, list.head)
+      else {
+        val c = list.head
+        if (c.parent.isDefined && !parentAlreadyThere(getParent(c.parent.get)))
+          orderClassesAcc(acc, list.tail :+ c, last_update + 1)
+        else
+          orderClassesAcc(c :: acc, list.tail, 0)
+      }
     }
+
+    orderClassesAcc(List(), list, 0).reverse
+  }
+
+  def run(ctx: Context)(prog: Program): Program = {
+    import ctx.reporter._
 
     val global = new GlobalScope
 
@@ -68,7 +68,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
     def parseProgram(prog: Program) = {
       parseMainObject(prog.main)
 
-      for (c <- orderClasses(prog.classes)) parseClass(c)
+      for (c <- orderClasses(ctx, prog.classes)) parseClass(c)
     }
 
     def parseMainObject(main: MainObject) = {
@@ -367,6 +367,7 @@ object NameAnalysis extends Pipeline[Program, Program] {
 
       f.setSymbol(s)
       parseIdentifier(s, f.id)
+      parseType(f.tpe)
 
       s
     }
