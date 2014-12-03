@@ -21,7 +21,7 @@ object TypeChecking extends Pipeline[Program, Program] {
       if (expected.isEmpty) {
         tpe
       } else {
-        if (!expected.exists(e => tpe.isSubTypeOf(e))) {
+        if (!expected.exists(e => tpe.isSubTypeOf(e)) || tpe == TError) {
           error("Type error: Expected: " + expected.toList.mkString(" or ") + ", found: " + tpe + " >> " + expr, expr)
           expected.head
         } else {
