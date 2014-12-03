@@ -69,10 +69,18 @@ object Types {
 
   case class TObject(classSymbol: ClassSymbol) extends Type {
     override def isSubTypeOf(tpe: Type): Boolean = tpe match {
-      case TObject(x) => classSymbol == x
-      case _ =>
-        if (classSymbol.parent.isDefined) classSymbol.parent.get.getType.isSubTypeOf(tpe)
-        else TAnyObject.isSubTypeOf(tpe)
+      case TAnyObject => true
+      case TObject(x) => {
+        val p = classSymbol.parent
+        println(x.name + " ~ " + classSymbol.name)
+        val a =
+          if (classSymbol == x) true
+          else if (p.isDefined) p.get.getType.isSubTypeOf(tpe)
+          else false
+        println(x.name + " ~ " + classSymbol.name + " = " + a)
+        a
+      }
+      case _ => false
     }
     override def toString = classSymbol.name
   }
@@ -80,6 +88,7 @@ object Types {
   // special object to implement the fact that all objects are its subclasses
   case object TAnyObject extends Type {
     override def isSubTypeOf(tpe: Type): Boolean = tpe match {
+      case _: TObject => true
       case TAnyObject => true
       case _ => false
     }
