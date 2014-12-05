@@ -208,6 +208,19 @@ object TypeChecking extends Pipeline[Program, Program] {
       val t = tcType(m.retType)
       val s = m.getSymbol
 
+      if (s.overridden.isDefined) {
+        val x = s.overridden.get
+
+        if (s.argList.size != x.argList.size)
+          ctx.reporter.error("Arguments not of the same size", x)
+
+        for ((v, e) <- s.argList.zip(x.argList)) {
+          if (!v.getType.isSubTypeOf(e.getType))
+            ctx.reporter.error("Not the same type in override", m)
+        }
+
+      }
+
       s.classSymbol.methods += (s.name -> s)
 
       s.setType(t)
