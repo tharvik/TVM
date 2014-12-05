@@ -240,7 +240,7 @@ object TypeChecking extends Pipeline[Program, Program] {
           ctx.reporter.error("Not same type of return in override", m)
       }
 
-      if (t != m.id.getType)
+      if (!t.isSubTypeOf(m.id.getType))
         ctx.reporter.error("Not same type of return", m)
 
       for (s <- m.stats) tcStat(s)
