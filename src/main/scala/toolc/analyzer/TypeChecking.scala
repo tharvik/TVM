@@ -215,7 +215,7 @@ object TypeChecking extends Pipeline[Program, Program] {
           ctx.reporter.error("Arguments not of the same size", x)
 
         for ((v, e) <- s.argList.zip(x.argList)) {
-          if (!v.getType.isSubTypeOf(e.getType))
+          if (!e.getType.isSubTypeOf(v.getType))
             ctx.reporter.error("Not the same type in override", m)
         }
 
