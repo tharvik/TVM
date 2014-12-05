@@ -208,6 +208,20 @@ object TypeChecking extends Pipeline[Program, Program] {
       val t = tcType(m.retType)
       val s = m.getSymbol
 
+      s.classSymbol.methods += (s.name -> s)
+
+      s.setType(t)
+      m.id.setSymbol(s)
+      m.id.setType(t)
+    }
+
+    def tcMethodSecondPass(m: MethodDecl) = {
+      for (a <- m.args) tcFormal(a)
+    }
+
+    def tcMethodThirdPass(m: MethodDecl) = {
+      val s = m.getSymbol
+
       if (s.overridden.isDefined) {
         val x = s.overridden.get
 
@@ -221,18 +235,6 @@ object TypeChecking extends Pipeline[Program, Program] {
 
       }
 
-      s.classSymbol.methods += (s.name -> s)
-
-      s.setType(t)
-      m.id.setSymbol(s)
-      m.id.setType(t)
-    }
-
-    def tcMethodSecondPass(m: MethodDecl) = {
-      for (a <- m.args) tcFormal(a)
-    }
-
-    def tcMethodThirdPass(m: MethodDecl) = {
       for (v <- m.vars) tcVar(v)
       tcExpr(m.retExpr, tcType(m.retType))
       for (s <- m.stats) tcStat(s)
