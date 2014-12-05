@@ -51,9 +51,11 @@ object Symbols {
     var totaly_defined = false
 
     def lookupMethod(n: String): Option[MethodSymbol] =
-      if (parent.isDefined && parent.get.lookupMethod(n).isDefined)
+      if (methods.get(n).isDefined)
+        methods.get(n)
+      else if (parent.isDefined)
         parent.get.lookupMethod(n)
-      else methods get n
+      else None
 
     def lookupVar(n: String): Option[VariableSymbol] =
       if (members.get(n).isDefined) members.get(n)

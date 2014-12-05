@@ -88,17 +88,24 @@ object TypeChecking extends Pipeline[Program, Program] {
         case x: MethodCall => {
           tcExpr(x.obj, TAnyObject) match {
             case TObject(cs) => {
-              val s = cs.lookupMethod(x.meth.value).get
-              x.meth.setSymbol(s)
 
-              if (s.argList.size != x.args.size)
-                ctx.reporter.error("Arguments not of the same size", x)
+              val g = cs.lookupMethod(x.meth.value)
+              if (g.isEmpty) {
+                ctx.reporter.error("There is not matching function", x)
+                TError
+              } else {
+                val s = g.get
+                x.meth.setSymbol(s)
 
-              for ((v, e) <- s.argList.zip(x.args)) {
-                e.setType(tcExpr(e, v.getType))
+                if (s.argList.size != x.args.size)
+                  ctx.reporter.error("Arguments not of the same size", x)
+
+                for ((v, e) <- s.argList.zip(x.args)) {
+                  e.setType(tcExpr(e, v.getType))
+                }
+
+                s.getType
               }
-
-              s.getType
             }
 
             case _ => TError
@@ -175,35 +182,45 @@ object TypeChecking extends Pipeline[Program, Program] {
       val ordered = NameAnalysis.orderClasses(ctx, p.classes)
       for (c <- ordered) tcClassFirstPass(c)
       for (c <- ordered) tcClassSecondPass(c)
+      for (c <- ordered) tcClassThirdPass(c)
+      for (c <- ordered) tcClassFourthPass(c)
       tcMainObject(p.main)
     }
 
     def tcClassFirstPass(c: ClassDecl) = {
       c.getSymbol.setType(TObject(c.getSymbol))
-      for (m <- c.methods) tcMethodFirstPass(m)
     }
 
     def tcClassSecondPass(c: ClassDecl) = {
+      for (m <- c.methods) tcMethodFirstPass(m)
+    }
+
+    def tcClassThirdPass(c: ClassDecl) = {
       for (v <- c.vars) tcVar(v)
       for (m <- c.methods) tcMethodSecondPass(m)
+    }
+
+    def tcClassFourthPass(c: ClassDecl) = {
+      for (m <- c.methods) tcMethodThirdPass(m)
     }
 
     def tcMethodFirstPass(m: MethodDecl) = {
       val t = tcType(m.retType)
       val s = m.getSymbol
 
-      s.classSymbol.methods += (m.id.value -> s)
+      s.classSymbol.methods += (s.name -> s)
 
       s.setType(t)
       m.id.setSymbol(s)
       m.id.setType(t)
-
-      for (a <- m.args) tcFormal(a)
     }
 
     def tcMethodSecondPass(m: MethodDecl) = {
+      for (a <- m.args) tcFormal(a)
+    }
+
+    def tcMethodThirdPass(m: MethodDecl) = {
       for (v <- m.vars) tcVar(v)
-      for (f <- m.args) tcFormal(f)
       tcExpr(m.retExpr, tcType(m.retType))
       for (s <- m.stats) tcStat(s)
     }
@@ -229,7 +246,6 @@ object TypeChecking extends Pipeline[Program, Program] {
         case _: BooleanType => TBoolean
         case _: StringType => TString
         case x: Identifier => {
-          if (!x.isDefined) println(x)
           x.getSymbol match {
             case y: ClassSymbol => {
               val o = TObject(y)
