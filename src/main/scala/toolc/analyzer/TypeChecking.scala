@@ -221,6 +221,9 @@ object TypeChecking extends Pipeline[Program, Program] {
 
     def tcMethodThirdPass(m: MethodDecl) = {
       val s = m.getSymbol
+      for (v <- m.vars) tcVar(v)
+
+      val t = tcExpr(m.retExpr)
 
       if (s.overridden.isDefined) {
         val x = s.overridden.get
@@ -233,10 +236,13 @@ object TypeChecking extends Pipeline[Program, Program] {
             ctx.reporter.error("Not the same type in override", m)
         }
 
+        if (x.getType != t)
+          ctx.reporter.error("Not same type of return in override", m)
       }
 
-      for (v <- m.vars) tcVar(v)
-      tcExpr(m.retExpr, tcType(m.retType))
+      if (t != m.id.getType)
+        ctx.reporter.error("Not same type of return", m)
+
       for (s <- m.stats) tcStat(s)
     }
 
