@@ -9,3 +9,4 @@
 test_*
 toolc-reference-*jar
 /bin
+.metadata/
