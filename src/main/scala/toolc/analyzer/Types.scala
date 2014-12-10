@@ -72,12 +72,10 @@ object Types {
       case TAnyObject => true
       case TObject(x) => {
         val p = classSymbol.parent
-        println(x.name + " ~ " + classSymbol.name)
         val a =
           if (classSymbol == x) true
           else if (p.isDefined) p.get.getType.isSubTypeOf(tpe)
           else false
-        println(x.name + " ~ " + classSymbol.name + " = " + a)
         a
       }
       case _ => false

@@ -48,7 +48,7 @@ object Main {
                    TypeChecking andThen
                    CodeGeneration
 
-    pipeline.run(ctx)(ctx.file)
+    pipeline.run(ctx)(dump)
 
     ctx.reporter.terminateIfErrors
   }
