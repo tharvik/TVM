@@ -80,5 +80,9 @@ object Symbols {
 
   class VariableSymbol(val name: String) extends Symbol {
     var used = false
+    var bc_id = -1
+    var parent_class: Option[ClassSymbol] = None
+    def is_field = parent_class.isDefined
+    var is_arg = false
   }
 }
