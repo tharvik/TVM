@@ -10,3 +10,12 @@ test_*
 toolc-reference-*jar
 /bin
 .metadata/
+
+# latex
+*.aux
+*.log
+*.nav
+*.out
+*.pdf
+*.snm
+*.toc

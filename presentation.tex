@@ -1,0 +1,45 @@
+\documentclass{beamer}
+
+\title{JVM in C}
+\subtitle{A reference implementation}
+\author{Yannick Schaffer \& Val\'erian Rousset}
+\date{15 Decembre, 2014}
+
+\begin{document}
+
+	\maketitle
+
+	\begin{frame}{Specificity}
+		\begin{itemize}
+			\item UNIX way of life
+			\item Good modularity
+			\item CLI tools for every libs
+			\item Easy to extend with new tokens
+		\end{itemize}
+	\end{frame}
+
+	\begin{frame}{How to read bytecode}
+		\begin{itemize}
+			\item Will also tokenize
+			\item Use own library
+			\item Trying to do in a single pass
+		\end{itemize}
+	\end{frame}
+
+	\begin{frame}{Stack machine}
+		\begin{itemize}
+			\item Use a linked list for each block
+			\item Trying to optimize the critical path
+			\item May use dedicated asm for some stack operation
+		\end{itemize}
+	\end{frame}
+
+	\begin{frame}{Garbage collection}
+		\begin{itemize}
+			\item Using a reference counter for GC
+			\item Call GC after fixed iteration or on demand
+			\item Trying to have a zero leak VM
+		\end{itemize}
+	\end{frame}
+
+\end{document}
