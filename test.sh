@@ -1,9 +1,10 @@
 #!/bin/bash
 
-readonly prefix='test_'
 t='^Loading /.*/sbt-.*sbt-launch-lib.bash$'
 t="$t|^.\[0m\[.[\d+m(info|trace|error|success).\[0m\]"
 readonly sbt_cleanup="$t"
+readonly ref='toolc-reference-*.jar'
+readonly libs='lib/refparser.jar:lib/cafebabe.jar'
 
 if [[ $1 = '-s' ]]
 then
@@ -21,7 +22,8 @@ check() {
 	then
 		echo -n '.'
 	else
-		echo -n '!'
+		echo '!'
+		exit 1
 	fi
 }
 
@@ -31,9 +33,16 @@ compile() {
 	ls target/scala-*/toolc_*.jar
 }
 
+reference() {
+	local f="${1}"
+
+	java -jar ${ref} "$f" 2>&1 >/dev/null
+	check $?
+}
+
 generate() {
-	local com="${1}"
-	local out="${2}"
+	local f="${1}"
+	local com="${2}"
 
 	local ret1
 	if $use_sbt
@@ -41,32 +50,44 @@ generate() {
 		sbt_cmd=";compile; run $f;exit"
 		sbt <<< "$sbt_cmd" | \
 			grep -vE "$sbt_cleanup|^> $sbt_cmd$" \
-				> "${out}" 2>/dev/null
+				2>&1 >/dev/null
 		ret1=$?
-		check $ret1
 	else
 		scala -cp "$com" 'toolc.Main' "$f" \
-			> "${out}" 2>/dev/null
+			2>&1 >/dev/null
 		ret1=$?
-		check $ret1
 	fi
+	check $ret1
 }
 
 match() {
 	local com="$1"
 	local f="$2"
 
+	local l=$(grep -hE '^\s*(class|object)' "${f}" | \
+		sed 's/^\s*//' | \
+		cut -d ' ' -f 2 | \
+		tr -d '\r{')
+
 	echo -n "Testing: $f "
 
-	generate "${com}" "${prefix}"1
-	generate "${com}" "${prefix}"2
+	reference "${f}"
+	for p in ${l}
+	do
+		javap -c "${p}" > "${p}_ref"
+		check $?
+	done
+	generate "${f}" "${com}"
 
-	diff -q "$prefix"1 "$prefix"2 > /dev/null
-	ret3=$?
-	check $ret3
+	for p in ${l}
+	do
+		javap -c "${p}" > "${p}_tes"
+		diff -q "${p}_ref" "${p}_tes" > /dev/null
+		check $?
+		rm "${p}"{_{tes,ref},.class}
+	done
 
 	echo
-	[[ $ret3 -ne 0 ]] && exit 1
 }
 
 if ! $use_sbt
@@ -80,13 +101,11 @@ if [ $# -ne 0 ]
 then
 	for f in "$@"
 	do
-		match "$local_test" "$f"
+		match "$local_test:${libs}" "$f"
 	done
 else
-	for f in programs/* wrong_programs/*
+	for f in program/*
 	do
-		match "$local_test" "$f"
+		match "$local_test:${libs}" "$f"
 	done
 fi
-
-#rm "$prefix"{1,2}
