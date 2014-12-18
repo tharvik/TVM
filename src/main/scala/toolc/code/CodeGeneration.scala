@@ -96,11 +96,8 @@ object CodeGeneration extends Pipeline[Program, Unit] {
       generateExprCode(ch, c, mt.retExpr)
 
       mt.retType.getType match {
-        case TInt => ch << IRETURN
-        case TIntArray => ch << ARETURN
-        case TBoolean => ch << IRETURN
-        case TString => ch << ARETURN
-        case TObject(_) => ch << ARETURN
+        case TInt | TBoolean => ch << IRETURN
+        case TIntArray | TString | TObject(_) => ch << ARETURN
         case _ => ???
       }
 
@@ -170,11 +167,8 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           } else {
             generateExprCode(ch, c, expr)
             s.getType match {
-              case TInt => ch << IStore(s.bc_id)
-              case TBoolean => ch << IStore(s.bc_id)
-              case TIntArray => ch << AStore(s.bc_id)
-              case TString => ch << AStore(s.bc_id)
-              case TObject(_) => ch << AStore(s.bc_id)
+              case TInt | TBoolean => ch << IStore(s.bc_id)
+              case TIntArray | TString | TObject(_) => ch << AStore(s.bc_id)
               case _ => ???
             }
           }
@@ -228,37 +222,28 @@ object CodeGeneration extends Pipeline[Program, Unit] {
         ch << Label(end)
       }
 
+      def commonAndOr(lhs: ExprTree, rhs: ExprTree, i: ByteCode, bcf: (String) => AbstractByteCode) = {
+          val end = ch.getFreshLabel("common and or end")
+
+          ch << i
+
+          generateExprCode(ch, c, lhs)
+
+          ch << bcf(end)
+          ch << POP
+
+          generateExprCode(ch, c, rhs)
+
+          ch << Label(end)
+        }
+
       expr match {
 
-        case And(lhs, rhs) => { // TODO merge and / or
-          val end = ch.getFreshLabel("and end")
+        case And(lhs, rhs) =>
+          commonAndOr(lhs, rhs, ICONST_0, label => IfEq(label))
 
-          ch << ICONST_0
-
-          generateExprCode(ch, c, lhs)
-
-          ch << IfEq(end)
-          ch << POP
-
-          generateExprCode(ch, c, rhs)
-
-          ch << Label(end)
-        }
-
-        case Or(lhs, rhs) => {
-          val end = ch.getFreshLabel("or end")
-
-          ch << ICONST_1
-
-          generateExprCode(ch, c, lhs)
-
-          ch << IfNe(end)
-          ch << POP
-
-          generateExprCode(ch, c, rhs)
-
-          ch << Label(end)
-        }
+        case Or(lhs, rhs) =>
+          commonAndOr(lhs, rhs, ICONST_1, label => IfNe(label))
 
         case Plus(lhs, rhs) => {
           (lhs.getType, rhs.getType) match {
@@ -286,11 +271,9 @@ object CodeGeneration extends Pipeline[Program, Unit] {
         case LessThan(lhs, rhs) => trivialBool(lhs, rhs, label => If_ICmpLt(label))
         case Equals(lhs, rhs) => {
           val f = lhs.getType match {
-            case TInt => label => If_ICmpEq(label)
-            case TBoolean => label => If_ICmpEq(label)
-            case TIntArray => label => If_ACmpEq(label)
-            case TString => label => If_ACmpEq(label)
-            case TObject(_) => label => If_ACmpEq(label)
+            case TInt | TBoolean => label => If_ICmpEq(label)
+            case TIntArray | TString | TObject(_) => label => If_ACmpEq(label)
+            case _ => ???
           }
           trivialBool(lhs, rhs, f)
         }
@@ -326,11 +309,8 @@ object CodeGeneration extends Pipeline[Program, Unit] {
             ch << ArgLoad(sym.bc_id)
           } else
             sym.getType match {
-              case TInt => ch << ILoad(sym.bc_id)
-              case TBoolean => ch << ILoad(sym.bc_id)
-              case TIntArray => ch << ALoad(sym.bc_id)
-              case TString => ch << ALoad(sym.bc_id)
-              case TObject(_) => ch << ALoad(sym.bc_id)
+              case TInt | TBoolean => ch << ILoad(sym.bc_id)
+              case TIntArray | TString | TObject(_) => ch << ALoad(sym.bc_id)
               case _ => ???
             }
         }
@@ -346,19 +326,9 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           ch << DefaultNew(id.value)
 
         case Not(expr) => {
-          val okay = ch.getFreshLabel("not")
-
-          generateExprCode(ch, c, expr)
-
           ch << ICONST_1
-          ch << SWAP
-          ch << IfEq(okay)
-          ch << POP
-          ch << ICONST_0
-          ch << Label(okay)
-          //          ch << ICONST_1
-          //          generateExprCode(ch, expr)
-          //          ch << ISUB
+          generateExprCode(ch, c, expr)
+          ch << ISUB
         }
 
       }
