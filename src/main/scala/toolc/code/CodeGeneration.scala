@@ -47,7 +47,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
         val tpe = typeToString(v.tpe.getType)
         val name = v.id.value
         classFile.addField(tpe, name)
-        v.getSymbol.parent_class = Some(ct.getSymbol)
+        v.getSymbol.clss = Some(ct.getSymbol)
       }
 
       for (m <- ct.methods) {
@@ -57,7 +57,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
 
         val mh = classFile.addMethod(tpe, name, signature)
 
-        generateMethodCode(mh.codeHandler, m)
+        generateMethodCode(mh.codeHandler, ct.getSymbol, m)
       }
 
       classFile.writeToFile(dir + ct.id.value + ".class")
@@ -82,7 +82,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
     def methToString(m: MethodSymbol): String =
       "(" + methToStringArgs(m) + ")" + typeToString(m.getType)
 
-    def generateMethodCode(ch: CodeHandler, mt: MethodDecl): Unit = {
+    def generateMethodCode(ch: CodeHandler, c: ClassSymbol, mt: MethodDecl): Unit = {
       val methSym = mt.getSymbol
 
       for ((v, i) <- mt.args.zipWithIndex) {
@@ -90,10 +90,10 @@ object CodeGeneration extends Pipeline[Program, Unit] {
         v.getSymbol.bc_id = i + 1
       }
       for (v <- mt.vars) v.getSymbol.bc_id = ch.getFreshVar
-      for (s <- mt.stats) generateStatCode(ch, s)
+      for (s <- mt.stats) generateStatCode(ch, c, s)
 
       ch << LineNumber(mt.retExpr.line)
-      generateExprCode(ch, mt.retExpr)
+      generateExprCode(ch, c, mt.retExpr)
 
       mt.retType.getType match {
         case TInt => ch << IRETURN
@@ -107,33 +107,33 @@ object CodeGeneration extends Pipeline[Program, Unit] {
       ch.freeze
     }
 
-    def generateStatCode(ch: CodeHandler, stat: StatTree): Unit = {
+    def generateStatCode(ch: CodeHandler, c: ClassSymbol, stat: StatTree): Unit = {
       ch << LineNumber(stat.line)
       stat match {
 
         case Block(stats) =>
-          for (s <- stats) generateStatCode(ch, s)
+          for (s <- stats) generateStatCode(ch, c, s)
 
         case If(expr, thn, els) => {
 
           val end = ch.getFreshLabel("if end")
 
-          generateExprCode(ch, expr)
+          generateExprCode(ch, c, expr)
 
           if (els.isEmpty) {
             ch << IfEq(end)
 
-            generateStatCode(ch, thn)
+            generateStatCode(ch, c, thn)
           } else {
             val esl = ch.getFreshLabel("if else")
 
             ch << IfEq(esl)
 
-            generateStatCode(ch, thn)
+            generateStatCode(ch, c, thn)
             ch << Goto(end)
 
             ch << Label(esl)
-            generateStatCode(ch, els.get)
+            generateStatCode(ch, c, els.get)
           }
 
           ch << Label(end)
@@ -145,28 +145,30 @@ object CodeGeneration extends Pipeline[Program, Unit] {
 
           ch << Label(begin)
 
-          generateExprCode(ch, expr)
+          generateExprCode(ch, c, expr)
 
           ch << IfEq(end)
-          generateStatCode(ch, stat)
+          generateStatCode(ch, c, stat)
           ch << Goto(begin)
 
           ch << Label(end)
         }
 
-        case Println(expr) =>
+        case Println(expr) => {
           ch << GetStatic("java/lang/System", "out", "Ljava/io/PrintStream;")
-          generateExprCode(ch, expr)
-          ch << InvokeVirtual("java/io/PrintStream", "println", "(Ljava/lang/String;)V")
+          generateExprCode(ch, c, expr)
+          val sign = "(" + typeToString(expr.getType) + ")V"
+          ch << InvokeVirtual("java/io/PrintStream", "println", sign)
+        }
 
         case Assign(id, expr) => {
           val s = id.getSymbol.asInstanceOf[VariableSymbol]
           if (s.is_field) {
             ch << ALoad(0)
-            generateExprCode(ch, expr)
-            ch << PutField(s.parent_class.get.name, id.value, typeToString(id.getType))
+            generateExprCode(ch, c, expr)
+            ch << PutField(c.name, id.value, typeToString(id.getType))
           } else {
-            generateExprCode(ch, expr)
+            generateExprCode(ch, c, expr)
             s.getType match {
               case TInt => ch << IStore(s.bc_id)
               case TBoolean => ch << IStore(s.bc_id)
@@ -184,15 +186,15 @@ object CodeGeneration extends Pipeline[Program, Unit] {
             //            ch << ALoad(0)
             //            ch << GetField(s.parent_class.get.name, id.value, typeToString(id.getType))
 
-            generateExprCode(ch, id)
-            generateExprCode(ch, index)
-            generateExprCode(ch, expr)
+            generateExprCode(ch, c, id)
+            generateExprCode(ch, c, index)
+            generateExprCode(ch, c, expr)
             ch << IASTORE
             //            ch << PutField(s.parent_class.get.name, id.value, typeToString(id.getType))
           } else {
-            generateExprCode(ch, id)
-            generateExprCode(ch, index)
-            generateExprCode(ch, expr)
+            generateExprCode(ch, c, id)
+            generateExprCode(ch, c, index)
+            generateExprCode(ch, c, expr)
 
             ch << IASTORE
           }
@@ -201,11 +203,11 @@ object CodeGeneration extends Pipeline[Program, Unit] {
       }
     }
 
-    def generateExprCode(ch: CodeHandler, expr: ExprTree): Unit = {
+    def generateExprCode(ch: CodeHandler, c: ClassSymbol, expr: ExprTree): Unit = {
 
       def trivialCode(lhs: ExprTree, rhs: ExprTree, bc: ByteCode) = {
-        generateExprCode(ch, lhs)
-        generateExprCode(ch, rhs)
+        generateExprCode(ch, c, lhs)
+        generateExprCode(ch, c, rhs)
 
         ch << bc
       }
@@ -215,8 +217,8 @@ object CodeGeneration extends Pipeline[Program, Unit] {
 
         ch << ICONST_1
 
-        generateExprCode(ch, lhs)
-        generateExprCode(ch, rhs)
+        generateExprCode(ch, c, lhs)
+        generateExprCode(ch, c, rhs)
 
         ch << bcf(end)
 
@@ -233,12 +235,12 @@ object CodeGeneration extends Pipeline[Program, Unit] {
 
           ch << ICONST_0
 
-          generateExprCode(ch, lhs)
+          generateExprCode(ch, c, lhs)
 
           ch << IfEq(end)
           ch << POP
 
-          generateExprCode(ch, rhs)
+          generateExprCode(ch, c, rhs)
 
           ch << Label(end)
         }
@@ -248,12 +250,12 @@ object CodeGeneration extends Pipeline[Program, Unit] {
 
           ch << ICONST_1
 
-          generateExprCode(ch, lhs)
+          generateExprCode(ch, c, lhs)
 
           ch << IfNe(end)
           ch << POP
 
-          generateExprCode(ch, rhs)
+          generateExprCode(ch, c, rhs)
 
           ch << Label(end)
         }
@@ -264,11 +266,11 @@ object CodeGeneration extends Pipeline[Program, Unit] {
             case _ => {
               ch << DefaultNew("java/lang/StringBuilder")
 
-              generateExprCode(ch, lhs)
+              generateExprCode(ch, c, lhs)
               val sign1 = "(" + typeToString(lhs.getType) + ")" + "Ljava/lang/StringBuilder;"
               ch << InvokeVirtual("java/lang/StringBuilder", "append", sign1)
 
-              generateExprCode(ch, rhs)
+              generateExprCode(ch, c, rhs)
               val sign2 = "(" + typeToString(rhs.getType) + ")" + "Ljava/lang/StringBuilder;"
               ch << InvokeVirtual("java/lang/StringBuilder", "append", sign2)
 
@@ -282,20 +284,29 @@ object CodeGeneration extends Pipeline[Program, Unit] {
         case Div(lhs, rhs) => trivialCode(lhs, rhs, IDIV)
 
         case LessThan(lhs, rhs) => trivialBool(lhs, rhs, label => If_ICmpLt(label))
-        case Equals(lhs, rhs) => trivialBool(lhs, rhs, label => If_ICmpEq(label))
+        case Equals(lhs, rhs) => {
+          val f = lhs.getType match {
+            case TInt => label => If_ICmpEq(label)
+            case TBoolean => label => If_ICmpEq(label)
+            case TIntArray => label => If_ACmpEq(label)
+            case TString => label => If_ACmpEq(label)
+            case TObject(_) => label => If_ACmpEq(label)
+          }
+          trivialBool(lhs, rhs, f)
+        }
 
         case ArrayRead(arr, index) => {
-          generateExprCode(ch, arr)
-          generateExprCode(ch, index)
+          generateExprCode(ch, c, arr)
+          generateExprCode(ch, c, index)
           ch << IALOAD
         }
         case ArrayLength(arr) =>
-          generateExprCode(ch, arr)
+          generateExprCode(ch, c, arr)
           ch << ARRAYLENGTH
 
         case MethodCall(obj, meth, args) => {
-          generateExprCode(ch, obj)
-          for (a <- args) generateExprCode(ch, a)
+          generateExprCode(ch, c, obj)
+          for (a <- args) generateExprCode(ch, c, a)
           val sym = meth.getSymbol.asInstanceOf[MethodSymbol]
           ch << InvokeVirtual(sym.classSymbol.name, meth.value, methToString(sym))
         }
@@ -310,7 +321,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           val sym = x.getSymbol.asInstanceOf[VariableSymbol]
           if (sym.is_field) {
             ch << ALoad(0)
-            ch << GetField(sym.parent_class.get.name, x.value, typeToString(x.getType))
+            ch << GetField(c.name, x.value, typeToString(x.getType))
           } else if (sym.is_arg) {
             ch << ArgLoad(sym.bc_id)
           } else
@@ -328,7 +339,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
           ch << ALoad(0)
 
         case NewIntArray(size) =>
-          generateExprCode(ch, size)
+          generateExprCode(ch, c, size)
           ch << NewArray(10) // 10 == T_INT
 
         case New(id) =>
@@ -337,7 +348,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
         case Not(expr) => {
           val okay = ch.getFreshLabel("not")
 
-          generateExprCode(ch, expr)
+          generateExprCode(ch, c, expr)
 
           ch << ICONST_1
           ch << SWAP
@@ -353,8 +364,8 @@ object CodeGeneration extends Pipeline[Program, Unit] {
       }
     }
 
-    def generateMainMethodCode(ch: CodeHandler, stmts: List[StatTree], cname: String): Unit = {
-      for (s <- stmts) generateStatCode(ch, s);
+    def generateMainMethodCode(ch: CodeHandler, stmts: List[StatTree], c: ClassSymbol): Unit = {
+      for (s <- stmts) generateStatCode(ch, c, s);
       ch << RETURN
       ch.freeze
     }
@@ -377,7 +388,7 @@ object CodeGeneration extends Pipeline[Program, Unit] {
     classFile.addDefaultConstructor
 
     val ch = classFile.addMainMethod.codeHandler
-    generateMainMethodCode(ch, prog.main.stats, prog.main.id.value)
+    generateMainMethodCode(ch, prog.main.stats, prog.main.getSymbol)
     classFile.writeToFile(outDir + prog.main.id.value + ".class")
   }
 
