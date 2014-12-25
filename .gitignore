@@ -23,3 +23,7 @@ toolc-reference-*jar
 test_*
 *_ref
 *_tes
+
+*.o
+.tup
+tags

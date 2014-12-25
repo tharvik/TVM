@@ -1,0 +1,11 @@
+CC		= gcc
+CC_FLAGS	= -std=c99 -Wall -Wextra -g -fPIC
+
+LIB_FLAGS	= -shared -Wl,-soname
+
+LD_FLAGS	= -lGL -lGLU -lglut -lGLEW
+
+!cc 		= |> ^ CC    %f^ $(CC) $(CC_FLAGS)  -c     %f -o %o |>
+!lib 		= |> ^ LIB   %o^ $(CC) $(LIB_FLAGS) -Wl,%o %f -o %o |>
+!link		= |> ^ LINK  %o^ $(CC) $(LD_FLAGS)         %f -o %o |>
+!dlink		= |> ^ DLINK %o^ $(CC) $(CC_FLAGS)  -L.    %f -o %o |>
