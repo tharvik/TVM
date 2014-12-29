@@ -1,5 +1,0 @@
-include_rules
-
-: foreach *.c	| *.h *.m	|> !cc		|> %B.o
-: *.o				|> !lib		|> libbc.so
-: main.o	| *.so		|> !dlink -lbc	|> bc

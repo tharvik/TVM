@@ -27,3 +27,6 @@ test_*
 *.o
 .tup
 tags
+doxygen
+bin
+ValgrindOut.xml

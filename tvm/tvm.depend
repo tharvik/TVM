@@ -1,0 +1,561 @@
+# depslib dependency file v1.0
+1419721131 source:/home/tharvik/code/scala/clp2014-group13/tvm/src/bc/self.cpp
+	"self.hpp"
+	<iostream>
+
+1419721131 /home/tharvik/code/scala/clp2014-group13/tvm/src/bc/self.hpp
+	"file.hpp"
+	<cstdint>
+
+1419721131 /home/tharvik/code/scala/clp2014-group13/tvm/src/bc/file.hpp
+	"util.hpp"
+	<algorithm>
+	<fstream>
+	<array>
+	<string>
+
+1419721131 /home/tharvik/code/scala/clp2014-group13/tvm/src/bc/util.hpp
+	<array>
+	<cstdint>
+
+1419723217 source:/home/tharvik/code/scala/clp2014-group13/tvm/src/bc/attribute.cpp
+	"attribute.hpp"
+	<iostream>
+	"attribute.m"
+	"attribute_unchecked.m"
+
+1419721131 /home/tharvik/code/scala/clp2014-group13/tvm/src/bc/attribute.hpp
+	"file.hpp"
+	"cp.hpp"
+	"opcode.hpp"
+	<cstdint>
+	<string>
+	"attribute.m"
+	"attribute.m"
+
+1419721131 /home/tharvik/code/scala/clp2014-group13/tvm/src/bc/cp.hpp
+	"file.hpp"
+	<vector>
+	"cp.m"
+	"cp.m"
+	<cstdint>
+	<cstdint>
+	<cstdint>
+	<cstdint>
+	<cstdint>
+	<cstdint>
+	<cstdint>
+	<cstdint>
+	<cstdint>
+	<cstdint>
+	<cstdint>
+	<cstdint>
+	<cstdint>
+	<cstdint>
+	<cstdint>
+
+1419721131 /home/tharvik/code/scala/clp2014-group13/tvm/src/bc/cp.m
+
+1419723303 /home/tharvik/code/scala/clp2014-group13/tvm/src/bc/opcode.hpp
+	"file.hpp"
+	<iostream>
+	"opcode_unchecked.m"
+
+1419721131 /home/tharvik/code/scala/clp2014-group13/tvm/src/bc/opcode_unchecked.m
+
+1419721131 /home/tharvik/code/scala/clp2014-group13/tvm/src/bc/attribute.m
+
+1419721131 /home/tharvik/code/scala/clp2014-group13/tvm/src/bc/attribute_unchecked.m
+
+1419723827 source:/home/tharvik/code/scala/clp2014-group13/tvm/src/bc/bc.cpp
+	"bc.hpp"
+
+1419723805 /home/tharvik/code/scala/clp2014-group13/tvm/src/bc/bc.hpp
+	"file.hpp"
+	"cp.hpp"
+	"self.hpp"
+	"interface.hpp"
+	"field.hpp"
+	"methods.hpp"
+	<cstdint>
+	<string>
+
+1419721131 /home/tharvik/code/scala/clp2014-group13/tvm/src/bc/interface.hpp
+	"file.hpp"
+
+1419723955 /home/tharvik/code/scala/clp2014-group13/tvm/src/bc/field.hpp
+	"file.hpp"
+	"attribute.hpp"
+	"cp.hpp"
+	<cstdint>
+	<vector>
+
+1419721131 /home/tharvik/code/scala/clp2014-group13/tvm/src/bc/methods.hpp
+	"file.hpp"
+	"attribute.hpp"
+	<cstdint>
+	<vector>
+
+1419721131 source:/home/tharvik/code/scala/clp2014-group13/tvm/src/bc/cp.cpp
+	"cp.hpp"
+	"bc.hpp"
+	<iostream>
+	"cp.m"
+	<iostream>
+	"cp_unchecked.m"
+
+1419721131 /home/tharvik/code/scala/clp2014-group13/tvm/src/bc/cp_unchecked.m
+
+1419723564 source:/home/tharvik/code/scala/clp2014-group13/tvm/src/bc/field.cpp
+	"field.hpp"
+	<iostream>
+
+1419721131 source:/home/tharvik/code/scala/clp2014-group13/tvm/src/bc/file.cpp
+	"file.hpp"
+
+1419721131 source:/home/tharvik/code/scala/clp2014-group13/tvm/src/bc/interface.cpp
+	"interface.hpp"
+	<cstdlib>
+
+1419721131 source:/home/tharvik/code/scala/clp2014-group13/tvm/src/bc/main.cpp
+	<iostream>
+	"cp.h"
+	<stdio.h>
+	"bc.h"
+	"this.h"
+	"bc.h"
+	"interface.h"
+	"bc.h"
+	"field.h"
+	"attribute.h"
+	"bc.h"
+	"method.h"
+	"method_type.h"
+	<stdint.h>
+	"bc.h"
+	"method.h"
+	"bc.hpp"
+
+1419721131 /home/tharvik/code/scala/clp2014-group13/tvm/src/bc/cp.h
+	"bc_type.h"
+	<stdbool.h>
+	"cp_type.h"
+	"bc_type.h"
+	"cp_type.h"
+	<stdint.h>
+	"cp_type.h"
+
+1419721131 /home/tharvik/code/scala/clp2014-group13/tvm/src/bc/bc_type.h
+	<stdio.h>
+	<stdint.h>
+
+1419721131 /home/tharvik/code/scala/clp2014-group13/tvm/src/bc/cp_type.h
+	<stdbool.h>
+	<stdint.h>
+	<stdint.h>
+	<stdint.h>
+	<stdint.h>
+	<stdint.h>
+	<stdint.h>
+	<stdint.h>
+	<stdint.h>
+	<stdint.h>
+	<stdint.h>
+	<stdint.h>
+	<stdint.h>
+	<stdint.h>
+	<stdint.h>
+	<stdint.h>
+
+1419721131 /home/tharvik/code/scala/clp2014-group13/tvm/src/bc/bc.h
+	"bc_type.h"
+
+1419721131 /home/tharvik/code/scala/clp2014-group13/tvm/src/bc/this.h
+	"bc_type.h"
+	"field_type.h"
+
+1419721131 /home/tharvik/code/scala/clp2014-group13/tvm/src/bc/field_type.h
+	"attribute_type.h"
+	<stdint.h>
+
+1419721131 /home/tharvik/code/scala/clp2014-group13/tvm/src/bc/attribute_type.h
+	<stdint.h>
+	"attribute.m"
+	<stdint.h>
+	<stdint.h>
+	<stdint.h>
+
+1419721131 /home/tharvik/code/scala/clp2014-group13/tvm/src/bc/interface.h
+	"bc_type.h"
+
+1419721131 /home/tharvik/code/scala/clp2014-group13/tvm/src/bc/field.h
+	"bc_type.h"
+	"field_type.h"
+	"bc_type.h"
+	<stdint.h>
+
+1419721131 /home/tharvik/code/scala/clp2014-group13/tvm/src/bc/attribute.h
+	"attribute_type.h"
+	"bc_type.h"
+	"attribute_type.h"
+	<stdio.h>
+	"attribute_type.h"
+
+1419721131 /home/tharvik/code/scala/clp2014-group13/tvm/src/bc/method.h
+	"bc_type.h"
+	"method_type.h"
+	"bc_type.h"
+	"method_type.h"
+	"attribute_type.h"
+	"bc_type.h"
+
+1419721131 /home/tharvik/code/scala/clp2014-group13/tvm/src/bc/method_type.h
+	<stdint.h>
+
+1419722704 source:/home/tharvik/code/scala/clp2014-group13/tvm/src/bc/methods.cpp
+	"methods.hpp"
+	<iostream>
+
+1419721131 source:/home/tharvik/code/scala/clp2014-group13/tvm/src/bc/opcode.cpp
+	"opcode.hpp"
+	"opcode.m"
+
+1419721131 /home/tharvik/code/scala/clp2014-group13/tvm/src/bc/opcode.m
+
+1419762260 source:/home/tharvik/code/scala/clp2014-group13/tvm/attribute.cpp
+	"attribute.hpp"
+	<iostream>
+	"attribute.m"
+	"attribute_unchecked.m"
+
+1419765332 /home/tharvik/code/scala/clp2014-group13/tvm/attribute.hpp
+	"file.hpp"
+	"cp.hpp"
+	"opcode.hpp"
+	<cstdint>
+	<string>
+	"attribute.m"
+	"attribute.m"
+
+1419763231 /home/tharvik/code/scala/clp2014-group13/tvm/file.hpp
+	"util.hpp"
+	<algorithm>
+	<fstream>
+	<array>
+	<string>
+
+1419763232 /home/tharvik/code/scala/clp2014-group13/tvm/util.hpp
+	<array>
+	<cstdint>
+
+1419763232 /home/tharvik/code/scala/clp2014-group13/tvm/cp.hpp
+	"file.hpp"
+	<vector>
+	"cp.m"
+	"cp.m"
+	<cstdint>
+	<cstdint>
+	<cstdint>
+	<cstdint>
+	<cstdint>
+	<cstdint>
+	<cstdint>
+	<cstdint>
+	<cstdint>
+	<cstdint>
+	<cstdint>
+	<cstdint>
+	<cstdint>
+	<cstdint>
+	<cstdint>
+
+1419721131 /home/tharvik/code/scala/clp2014-group13/tvm/cp.m
+
+1419763230 /home/tharvik/code/scala/clp2014-group13/tvm/opcode.hpp
+	"file.hpp"
+	<iostream>
+	"opcode_unchecked.m"
+
+1419721131 /home/tharvik/code/scala/clp2014-group13/tvm/opcode_unchecked.m
+
+1419721131 /home/tharvik/code/scala/clp2014-group13/tvm/attribute.m
+
+1419721131 /home/tharvik/code/scala/clp2014-group13/tvm/attribute_unchecked.m
+
+1419765217 source:/home/tharvik/code/scala/clp2014-group13/tvm/bc.cpp
+	"bc.hpp"
+
+1419763864 /home/tharvik/code/scala/clp2014-group13/tvm/bc.hpp
+	"file.hpp"
+	"cp.hpp"
+	"self.hpp"
+	"interface.hpp"
+	"field.hpp"
+	"methods.hpp"
+	<cstdint>
+	<string>
+
+1419763230 /home/tharvik/code/scala/clp2014-group13/tvm/self.hpp
+	"file.hpp"
+	<cstdint>
+
+1419763229 /home/tharvik/code/scala/clp2014-group13/tvm/interface.hpp
+	"file.hpp"
+
+1419763227 /home/tharvik/code/scala/clp2014-group13/tvm/field.hpp
+	"file.hpp"
+	"attribute.hpp"
+	"cp.hpp"
+	<cstdint>
+	<vector>
+
+1419763851 /home/tharvik/code/scala/clp2014-group13/tvm/methods.hpp
+	"file.hpp"
+	"attribute.hpp"
+	<cstdint>
+	<vector>
+
+1419721131 source:/home/tharvik/code/scala/clp2014-group13/tvm/cp.cpp
+	"cp.hpp"
+	"bc.hpp"
+	<iostream>
+	"cp.m"
+	<iostream>
+	"cp_unchecked.m"
+
+1419721131 /home/tharvik/code/scala/clp2014-group13/tvm/cp_unchecked.m
+
+1419723993 source:/home/tharvik/code/scala/clp2014-group13/tvm/field.cpp
+	"field.hpp"
+	<iostream>
+
+1419763232 source:/home/tharvik/code/scala/clp2014-group13/tvm/file.cpp
+	"file.hpp"
+
+1419721131 source:/home/tharvik/code/scala/clp2014-group13/tvm/interface.cpp
+	"interface.hpp"
+	<cstdlib>
+
+1419721131 source:/home/tharvik/code/scala/clp2014-group13/tvm/main.cpp
+	<iostream>
+	"cp.h"
+	<stdio.h>
+	"bc.h"
+	"this.h"
+	"bc.h"
+	"interface.h"
+	"bc.h"
+	"field.h"
+	"attribute.h"
+	"bc.h"
+	"method.h"
+	"method_type.h"
+	<stdint.h>
+	"bc.h"
+	"method.h"
+	"bc.hpp"
+
+1419764112 source:/home/tharvik/code/scala/clp2014-group13/tvm/methods.cpp
+	"methods.hpp"
+	<iostream>
+
+1419721131 source:/home/tharvik/code/scala/clp2014-group13/tvm/opcode.cpp
+	"opcode.hpp"
+	"opcode.m"
+
+1419721131 /home/tharvik/code/scala/clp2014-group13/tvm/opcode.m
+
+1419721131 source:/home/tharvik/code/scala/clp2014-group13/tvm/self.cpp
+	"self.hpp"
+	<iostream>
+
+1419802927 source:/home/tharvik/code/scala/clp2014-group13/tvm/src/attribute.cpp
+	"attribute.hpp"
+	"cp.hpp"
+	"opcode.hpp"
+	"file.hpp"
+	<iostream>
+	"../macro/attribute.m"
+	"../macro/attribute_unchecked.m"
+
+1419802860 /home/tharvik/code/scala/clp2014-group13/tvm/include/attribute.hpp
+	"file_h.hpp"
+	"cp_h.hpp"
+	"opcode_h.hpp"
+	<cstdint>
+	<string>
+	<vector>
+	"../macro/attribute.m"
+	"../macro/attribute.m"
+
+1419802697 /home/tharvik/code/scala/clp2014-group13/tvm/include/file.hpp
+	"util_h.hpp"
+	<algorithm>
+	<fstream>
+	<array>
+	<string>
+
+1419763232 /home/tharvik/code/scala/clp2014-group13/tvm/include/util.hpp
+	<array>
+	<cstdint>
+
+1419855166 /home/tharvik/code/scala/clp2014-group13/tvm/include/cp.hpp
+	"file.hpp"
+	<vector>
+	<cstdint>
+	"../macro/cp.m"
+	<cstdint>
+	<cstdint>
+	"../macro/cp_unchecked.m"
+
+1419721131 /home/tharvik/code/scala/clp2014-group13/tvm/macro/cp.m
+
+1419854580 /home/tharvik/code/scala/clp2014-group13/tvm/include/opcode.hpp
+	"bc.hpp"
+	"file_h.hpp"
+	"vm.hpp"
+	"cp.hpp"
+	<iostream>
+	"../macro/opcode_unchecked.m"
+
+1419854282 /home/tharvik/code/scala/clp2014-group13/tvm/macro/opcode_unchecked.m
+
+1419721131 /home/tharvik/code/scala/clp2014-group13/tvm/macro/attribute.m
+
+1419721131 /home/tharvik/code/scala/clp2014-group13/tvm/macro/attribute_unchecked.m
+
+1419803246 source:/home/tharvik/code/scala/clp2014-group13/tvm/src/bc.cpp
+	"bc.hpp"
+	"field.hpp"
+	"methods.hpp"
+	"attribute.hpp"
+
+1419803198 /home/tharvik/code/scala/clp2014-group13/tvm/include/bc.hpp
+	"file_h.hpp"
+	"cp.hpp"
+	"self.hpp"
+	"interface.hpp"
+	"field_h.hpp"
+	"methods_h.hpp"
+	"opcode_h.hpp"
+	<cstdint>
+	<string>
+	<vector>
+
+1419803089 /home/tharvik/code/scala/clp2014-group13/tvm/include/self.hpp
+	"file_h.hpp"
+	<cstdint>
+
+1419803421 /home/tharvik/code/scala/clp2014-group13/tvm/include/interface.hpp
+	"file_h.hpp"
+
+1419803314 /home/tharvik/code/scala/clp2014-group13/tvm/include/field.hpp
+	"file_h.hpp"
+	"attribute_h.hpp"
+	"cp_h.hpp"
+	<cstdint>
+	<string>
+	<vector>
+
+1419803493 /home/tharvik/code/scala/clp2014-group13/tvm/include/methods.hpp
+	"methods_h.hpp"
+	"file_h.hpp"
+	"attribute_h.hpp"
+	<cstdint>
+	<vector>
+	<string>
+
+1419854927 source:/home/tharvik/code/scala/clp2014-group13/tvm/src/cp.cpp
+	"cp.hpp"
+	"bc.hpp"
+	<iostream>
+	"../macro/cp.m"
+	"../macro/cp_unchecked.m"
+
+1419854855 /home/tharvik/code/scala/clp2014-group13/tvm/macro/cp_unchecked.m
+
+1419803375 source:/home/tharvik/code/scala/clp2014-group13/tvm/src/field.cpp
+	"field.hpp"
+	"file.hpp"
+	"cp.hpp"
+	"attribute.hpp"
+	<iostream>
+
+1419763232 source:/home/tharvik/code/scala/clp2014-group13/tvm/src/file.cpp
+	"file.hpp"
+
+1419803447 source:/home/tharvik/code/scala/clp2014-group13/tvm/src/interface.cpp
+	"interface.hpp"
+	"file.hpp"
+	<cstdlib>
+	<cstdint>
+
+1419777816 source:/home/tharvik/code/scala/clp2014-group13/tvm/src/main.cpp
+	<iostream>
+	"manager.hpp"
+
+1419803525 source:/home/tharvik/code/scala/clp2014-group13/tvm/src/methods.cpp
+	"methods.hpp"
+	"file.hpp"
+	"cp.hpp"
+	"attribute.hpp"
+	<iostream>
+
+1419854695 source:/home/tharvik/code/scala/clp2014-group13/tvm/src/opcode.cpp
+	"opcode.hpp"
+	"../macro/opcode.m"
+	"../macro/opcode_unchecked.m"
+
+1419778717 /home/tharvik/code/scala/clp2014-group13/tvm/macro/opcode.m
+
+1419803537 source:/home/tharvik/code/scala/clp2014-group13/tvm/src/self.cpp
+	"self.hpp"
+	<iostream>
+	"file.hpp"
+
+1419851425 source:/home/tharvik/code/scala/clp2014-group13/tvm/src/vm.cpp
+	"vm.hpp"
+	"opcode.hpp"
+
+1419854217 /home/tharvik/code/scala/clp2014-group13/tvm/include/vm.hpp
+	<stack>
+	<cstdint>
+	<string>
+	<vector>
+	<map>
+	"opcode_h.hpp"
+
+1419803454 /home/tharvik/code/scala/clp2014-group13/tvm/include/manager.hpp
+	"bc_h.hpp"
+	"vm.hpp"
+	<string>
+
+1419803480 source:/home/tharvik/code/scala/clp2014-group13/tvm/src/manager.cpp
+	"manager.hpp"
+	"bc.hpp"
+
+1419774815 /home/tharvik/code/scala/clp2014-group13/tvm/include/opcode_h.hpp
+
+1419801502 /home/tharvik/code/scala/clp2014-group13/tvm/include/methods_h.hpp
+
+1419801850 /home/tharvik/code/scala/clp2014-group13/tvm/include/file_h.hpp
+
+1419802324 /home/tharvik/code/scala/clp2014-group13/tvm/include/attribute_h.hpp
+
+1419802102 /home/tharvik/code/scala/clp2014-group13/tvm/include/bc_h.hpp
+
+1419801381 /home/tharvik/code/scala/clp2014-group13/tvm/include/vm_h.hpp
+
+1419802079 /home/tharvik/code/scala/clp2014-group13/tvm/include/cp_h.hpp
+
+1419801461 /home/tharvik/code/scala/clp2014-group13/tvm/include/self_h.hpp
+
+1419801830 /home/tharvik/code/scala/clp2014-group13/tvm/include/interface_h.hpp
+
+1419801814 /home/tharvik/code/scala/clp2014-group13/tvm/include/field_h.hpp
+
+1419802905 /home/tharvik/code/scala/clp2014-group13/tvm/include/util_h.hpp
+	<array>
+
+1419852963 /home/tharvik/code/scala/clp2014-group13/tvm/include/vm_state.hpp
+
