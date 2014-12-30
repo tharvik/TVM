@@ -5,16 +5,22 @@
 #include "vm.hpp"
 
 #include <string>
+#include <map>
+#include <stack>
 
 class manager
 {
 public:
-	manager(std::string main_class);
+	static void init(std::string name);
+	static void run();
 
-	void run();
+	static class clss *get_class(std::string name);
+
+	static std::stack<class vm> vms;
+
 private:
-	class bc const * const bc;
-	class vm vm;
+	static std::map<std::string,class clss*> classes;
+	static std::string class_name;
 };
 
 #endif // MANAGER_HPP

@@ -35,11 +35,9 @@ private:
 class attribute_info
 {
 public:
-	attribute::tag tag;
-
 	virtual ~attribute_info() {}
 protected:
-	attribute_info(attribute::tag tag) : tag(tag) {}
+	attribute_info() {}
 };
 
 class Code_attribute : public attribute_info
@@ -47,14 +45,12 @@ class Code_attribute : public attribute_info
 public:
 	Code_attribute(uint16_t max_stack, uint16_t max_locals,
 		       std::vector<opcode::base*> code)
-		: attribute_info(attribute::tag::Code), max_stack(max_stack),
+		: max_stack(max_stack),
 		  max_locals(max_locals), code(code) {}
 
 	uint16_t const max_stack;
 	uint16_t const max_locals;
 	std::vector<opcode::base*> code;
-
-
 
 	/*uint16_t exception_table_length;
 	{   uint16_t start_pc;
@@ -66,6 +62,17 @@ public:
 	uint16_t attributes_count;
 	attribute_info
 		attributes[attributes_count];*/
+};
+
+class LineNumberTable_attribute : public attribute_info
+{
+	/*
+	    u2 line_number_table_length;
+	    {   u2 start_pc;
+	        u2 line_number;
+	    } line_number_table[line_number_table_length];
+
+	*/
 };
 
 #endif

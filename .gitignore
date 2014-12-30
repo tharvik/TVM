@@ -30,3 +30,4 @@ tags
 doxygen
 bin
 ValgrindOut.xml
+tvm.*

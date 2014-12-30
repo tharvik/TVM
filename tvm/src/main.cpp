@@ -11,6 +11,7 @@ void syntax(char const *const argv0)
 }
 
 #include "manager.hpp"
+#include "clss.hpp"
 int main(int argc, char *const *const argv)
 {
 	if (argc != 2) {
@@ -18,8 +19,15 @@ int main(int argc, char *const *const argv)
 		return WRONG_SYNTAX;
 	}
 
-	class manager manager(argv[1]);
-	manager.run();
+	std::string file(argv[1]);
+//	std::string file("asd_class.class");
+
+	//class manager manager(argv[1]);
+	//manager.run();
+	file.resize(file.length() - 6);
+	manager::init(file);
+	manager::run();
+//	delete cls;
 
 	return NO_ERROR;
 }

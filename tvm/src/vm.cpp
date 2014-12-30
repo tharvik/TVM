@@ -4,22 +4,21 @@
 
 void vm::exec(class bc const &bc, std::vector<opcode::base*> ops)
 {
+	this->ops = ops;
+
 	pc = 0;
 
-	while (pc < ops.size()) {
-		ops.at(pc++)->exec(bc, *this);
-	}
+	while (pc < ops.size())
+		ops.at(pc++)->exec(bc);
 }
 
 
-void vm::pc_goto(std::vector<opcode::base*> const ops, uint32_t index)
+void vm::pc_goto(uint32_t index)
 {
-	uint32_t count = 0;
-	uint32_t i;
+	uint32_t i = pc - 1;
 
-	for (i = 0; i < ops.size() && count < index; i++) {
-		count += ops.at(i)->size;
-	}
+	for (; index > 0; i++)
+		index -= ops.at(i)->size;
 
 	pc = i;
 }

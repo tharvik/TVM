@@ -7,40 +7,56 @@
 #include <vector>
 #include <map>
 
+#include "clss.hpp"
 #include "opcode_h.hpp"
 
 namespace stack_elem
 {
-class base
-{
-public:
-	virtual ~base() {}
-};
+	class base
+	{
+	public:
+		virtual ~base() {}
+	};
 
-class int_const : public base
-{
-public:
-	int_const(int value) : value(value) {}
+#define macro_val_const(name, type)				\
+	class name##_const : public base			\
+	{							\
+	public:							\
+		name##_const(type value) : value(value) {}	\
+		type const value;				\
+	};
+	macro_val_const(int, int)
+	macro_val_const(string, std::string)
+#undef macro_val_const
 
-	int const value;
-};
+	class class_ref : public base
+	{
+	public:
+		class_ref(class clss *cls) : cls(cls) {}
+		class clss *cls;
+	};
 
-class class_ref : public base {
-public:
-	class_ref(std::map<std::string,std::vector<opcode::base*>> map) : map(map) {}
-
-	void invokevirtual(class vm &vm, std::string name);
-
-private:
-	std::map<std::string,std::vector<opcode::base*>> map;
-};
-
-class print_class : public class_ref {
-public:
-	print_class() : class_ref(std::map<std::string,std::vector<opcode::base*>>()) {}
-};
+	class print_class : public class_ref
+	{
+	public:
+		print_class() : class_ref(new print_clss()) {}
+	};
 
 }
+
+class class_state
+{
+public:
+	class_state(std::string class_name);
+
+
+};
+
+class class_pool
+{
+public:
+	std::map<std::string, class_state*> map;
+};
 
 class vm
 {
@@ -48,11 +64,14 @@ public:
 	void exec(class bc const &bc, std::vector<opcode::base*> ops);
 
 	std::stack<class stack_elem::base*> stack;
+	std::vector<class stack_elem::base*> vars;
+	class class_pool class_pool;
 
-	void pc_goto(std::vector<opcode::base*> const ops, uint32_t index);
+	void pc_goto(uint32_t index);
 
 private:
 	uint32_t pc;
+	std::vector<opcode::base*> ops;
 };
 
 #endif // VM_HPP

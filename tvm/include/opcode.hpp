@@ -3,112 +3,129 @@
 
 namespace opcode
 {
-class base;
+	class base;
 }
 
 #include "bc.hpp"
 #include "file_h.hpp"
 #include "vm.hpp"
 #include "cp.hpp"
+#include "manager.hpp"
 
 #include <iostream>
 
 namespace opcode
 {
 
-class base
-{
-public:
-	static base *parse(file& file);
+	class base
+	{
+	public:
+		static base *parse(file& file);
 
-	short const size;
+		short const size;
 
-	virtual void exec(class bc const &bc, class vm &vm) const = 0;
-protected:
-	base(short size) : size(size) {}
-};
+		virtual void exec(class bc const &bc) const = 0;
+	protected:
+		base(short size) : size(size) {}
+	};
 
-// TODO move it to template
-#define iconst_macro(num)						\
-class iconst_##num : public base					\
-{									\
-public:									\
-	static iconst_##num *parse(file& file __attribute__ ((unused)))	\
-	{								\
-		return new iconst_##num();				\
-	}								\
-									\
-	void exec(class bc const &bc __attribute__ ((unused)),		\
-		  class vm &vm) const					\
-	{								\
-		vm.stack.push(new stack_elem::int_const(num));		\
-	}								\
-private:								\
-	iconst_##num() : base(1) {}					\
-};
-iconst_macro(0)
-iconst_macro(1)
-iconst_macro(2)
-iconst_macro(3)
-iconst_macro(4)
-iconst_macro(5)
+#define iconst_macro(num)			\
+	class iconst_##num : public base		\
+	{						\
+	public:						\
+		static iconst_##num *parse(file& file);	\
+		void exec(class bc const &bc) const;	\
+							\
+	private:					\
+		iconst_##num() : base(1) {}		\
+	};
+	iconst_macro(0)
+	iconst_macro(1)
+	iconst_macro(2)
+	iconst_macro(3)
+	iconst_macro(4)
+	iconst_macro(5)
 #undef iconst_macro
 
-class iadd : public base
-{
-public:
-	static class iadd *parse(file& file);
-	void exec(class bc const &bc, class vm &vm) const;
-private:
-	iadd() : base(1) {}
-};
+#define opcode_with_index(name, size, type)			\
+	class name : public base {				\
+	public:							\
+		type const index;				\
+								\
+		static class name *parse(file& file);		\
+		void exec(class bc const &bc) const;		\
+	private:						\
+		name(type index) : base(size), index(index) {}	\
+	};
+	opcode_with_index(invokespecial, 3, uint16_t)
+	opcode_with_index(invokevirtual, 3, uint16_t)
+	opcode_with_index(getstatic, 3, uint16_t)
+	opcode_with_index(ldc, 2, uint8_t)
+	opcode_with_index(op_new, 3, uint16_t)
+#undef opcode_with_index
 
 
-class dup : public base
-{
-public:
-	static class dup *parse(file& file );
-	void exec(class bc const &bc, class vm &vm) const;
-private:
-	dup() : base(1) {}
-};
+#define opcode_trivial(name)			\
+	class name : public base {			\
+	public:						\
+		static name *parse(file& file);		\
+		void exec(class bc const &bc) const;	\
+							\
+	private:					\
+		name() : base(1) {}			\
+	};
+	opcode_trivial(dup)
+	opcode_trivial(iadd)
+	opcode_trivial(ireturn)
 
+	opcode_trivial(istore_0)
+	opcode_trivial(istore_1)
+	opcode_trivial(istore_2)
+	opcode_trivial(istore_3)
 
-class getstatic : public base
-{
-public:
-	uint16_t const index;
+	opcode_trivial(op_return)
+	opcode_trivial(pop)
+#undef opcode_trivial
 
-	static class getstatic *parse(file& file);
-	void exec(class bc const &bc, class vm &vm) const;
-private:
-	getstatic(uint16_t index) : base(3), index(index) {}
-};
+#define opcode_if(name)					\
+	class name : public base			\
+	{						\
+	public:						\
+		static name *parse(file& file);		\
+		void exec(class bc const &bc) const;	\
+	private:					\
+		uint16_t const branch;			\
+							\
+		name(uint16_t branch)			\
+		: base(3), branch(branch)		\
+		{}					\
+	};
+	opcode_if(if_icmpeq)
+	opcode_if(ifeq)
+#undef opcode_if
 
-
-class invokevirtual : public base
-{
-public:
-	uint16_t const index;
-
-	static class invokevirtual *parse(file& file);
-	void exec(class bc const &bc, class vm &vm) const;
-private:
-	invokevirtual(uint16_t index) : base(3), index(index) {}
-};
-
-#define opcode_macro(name, id, size)					\
-class name : public base {						\
-public:									\
-	static name *parse(file& file);					\
-	void exec(class bc const &bc, class vm &vm) const;		\
-									\
-private:								\
-	name() : base(size) {}						\
-};
+#define opcode_macro(name, id, size)		\
+	class name : public base {			\
+	public:						\
+		static name *parse(file& file);		\
+		void exec(class bc const &bc) const;	\
+							\
+	private:					\
+		name() : base(size) {}			\
+	};
 #include "../macro/opcode_unchecked.m"
 #undef opcode_macro
 
+	class bipush : public base
+	{
+	public:
+		uint8_t const byte;
+
+		static class bipush *parse(file& file);
+		void exec(class bc const &bc) const;
+	private:
+		bipush(uint8_t byte) : base(2), byte(byte) {}
+	};
 };
 
 #endif

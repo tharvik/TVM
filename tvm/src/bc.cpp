@@ -12,6 +12,9 @@ bc *bc::parse(std::string path)
 	uint16_t const minor_version = file.read<uint16_t>();
 	uint16_t const major_version = file.read<uint16_t>();
 
+	if (magic != 0xCAFEBABE)
+		throw "Not a valid java class file";
+
 	class cp cp(file);
 	class self self(file);
 	class interface interface(file);
@@ -37,12 +40,7 @@ std::vector<opcode::base*> bc::get_main() const
 			break;
 		}
 
- 	class Code_attribute * code;
-	for (class attribute_info * attr : attributes)
-		if (attr->tag == attribute::tag::Code) {
-			code = dynamic_cast<class Code_attribute * >(attr);
-			break;
-		}
+ 	class Code_attribute * code = dynamic_cast<class Code_attribute* >(attributes.at(0));
 
 	return code->code;
 }

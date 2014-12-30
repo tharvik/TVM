@@ -17,6 +17,7 @@ public:
 	type read();
 
 	std::vector<uint8_t> read(size_t length);
+
 private:
 	std::ifstream input;
 

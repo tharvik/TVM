@@ -13,8 +13,6 @@ methods *methods::parse(class file &file, class cp &cp)
 
 	size = file.read<uint16_t>();
 
-	std::cout << "methods: " << size << std::endl;
-
 	for (; size > 0; size--)
 		meths.push_back(parse_meth(file, cp));
 
@@ -35,7 +33,6 @@ method_info *methods::parse_meth(class file &file, class cp &cp)
 
 	attributes_count = file.read<uint16_t>();
 	attributes.reserve(attributes_count);
-	std::cerr << "attributes_count: " << attributes_count << std::endl;
 	for (; attributes_count > 0; attributes_count--)
 		attributes.push_back(attribute::parse(file, cp));
 

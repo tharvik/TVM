@@ -33,6 +33,11 @@ void cp::add_element(file& file)
 
 	cp_info *info;
 	switch(tag) {
+	case cp::tag::CONSTANT_Fieldref:
+	case cp::tag::CONSTANT_Methodref:
+	case cp::tag::CONSTANT_InterfaceMethodref:
+		info = ref_info::parse(file, *this);
+		break;
 #define cp_macro(name, id)					\
 	case cp::tag::name:					\
 		info = name##_info::parse(file, *this); \
@@ -41,12 +46,14 @@ void cp::add_element(file& file)
 #undef cp_macro
 
 	default:
-		printf("%x\n", tag);
 		std::cerr << "Unknow cp tag: " << tag << std::endl;
+		throw "Unknow cp tag";
 	}
 
 	this->elements.push_back(info);
 }
+
+#include "type.hpp"
 
 class CONSTANT_Utf8_info *CONSTANT_Utf8_info::parse(class file &file, class cp const &cp __attribute__ ((unused)))
 {
@@ -67,7 +74,7 @@ class CONSTANT_Class_info *CONSTANT_Class_info::parse(class file &file, class cp
 	return new CONSTANT_Class_info(utf8.value);
 };
 
-class CONSTANT_Fieldref_info *CONSTANT_Fieldref_info::parse(class file &file, class cp const &cp)
+class ref_info *ref_info::parse(class file &file, class cp const &cp)
 {
 	uint16_t class_index = file.read<uint16_t>();
 	uint16_t name_and_type_index = file.read<uint16_t>();
@@ -75,19 +82,54 @@ class CONSTANT_Fieldref_info *CONSTANT_Fieldref_info::parse(class file &file, cl
 	CONSTANT_Class_info *clss = cp.get<CONSTANT_Class_info*>(class_index);
 	CONSTANT_NameAndType_info *name_and_type = cp.get<CONSTANT_NameAndType_info*>(name_and_type_index);
 
-	return new CONSTANT_Fieldref_info(clss, name_and_type);
+	return new ref_info(clss, name_and_type);
 };
 
-class CONSTANT_Methodref_info *CONSTANT_Methodref_info::parse(class file &file, class cp const &cp)
+class CONSTANT_NameAndType_info *CONSTANT_NameAndType_info::parse(class file& file, class cp const& cp)
 {
-	uint16_t class_index = file.read<uint16_t>();
-	uint16_t name_and_type_index = file.read<uint16_t>();
+	uint16_t name_index = file.read<uint16_t>();
+	uint16_t desciptor_index = file.read<uint16_t>();
 
-	CONSTANT_Class_info *clss = cp.get<CONSTANT_Class_info*>(class_index);
-	CONSTANT_NameAndType_info *name_and_type = cp.get<CONSTANT_NameAndType_info*>(name_and_type_index);
+	std::string name = cp.get<CONSTANT_Utf8_info*>(name_index)->value;
+	std::string descriptor = cp.get<CONSTANT_Utf8_info*>(desciptor_index)->value;
 
-	return new CONSTANT_Methodref_info(clss, name_and_type);
+	std::vector<type*> types;
+
+	for (auto i = descriptor.begin(); i != descriptor.end(); i++) {
+		class type *type;
+		switch(*i) {
+		case 'L': {
+			std::string class_name;
+			while (*i != ';') class_name += *i++;
+			type = new type_class(class_name);
+			break;
+		}
+
+		case 'V': type = new type_void(); break;
+		case 'I': type = new type_int(); break;
+
+		case '(': continue;
+		case ')': continue;
+
+		default:
+			std::cerr << "Unknow type: " << *i << std::endl;
+		}
+
+		types.push_back(type);
+	}
+
+	return new CONSTANT_NameAndType_info(name, types);
 };
+
+class CONSTANT_String_info *CONSTANT_String_info::parse(class file& file, class cp const& cp)
+{
+	uint16_t index = file.read<uint16_t>();
+
+	CONSTANT_Utf8_info *utf8 = cp.get<CONSTANT_Utf8_info*>(index);
+
+	return new CONSTANT_String_info(utf8->value);
+};
+
 
 #define cp_macro(name, id, size)				\
 class name##_info * name##_info::parse(				\
@@ -100,7 +142,5 @@ class name##_info * name##_info::parse(				\
 								\
 	return nullptr;						\
 }
-
 #include "../macro/cp_unchecked.m"
 #undef cp_macro
-

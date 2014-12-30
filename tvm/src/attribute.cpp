@@ -9,7 +9,6 @@
 attribute_info *attribute::parse(class file& file, class cp& cp)
 {
 	uint16_t index = file.read<uint16_t>();
-	std::cerr << "attribute: ask index: " << index << std::endl;
 	std::string name = cp.get<CONSTANT_Utf8_info*>(index)->value;
 
 	file.read<uint32_t>();
@@ -22,14 +21,13 @@ attribute_info *attribute::get_element(class file& file, class cp& cp,
 {
 #define attribute_macro(type)				\
 	if (name == #type) {				\
-		std::cerr << "got " #type << std::endl;	\
 		return get_element_##type(file, cp);	\
 	}
 #include "../macro/attribute.m"
 #undef attribute_macro
 
 	std::cerr << "Unknow attribute: " << name << std::endl;
-	return nullptr;
+	throw "Unknow attribute: ";
 }
 
 attribute_info *attribute::get_element_Code(class file& file, class cp& cp)
@@ -51,13 +49,8 @@ attribute_info *attribute::get_element_Code(class file& file, class cp& cp)
 		size -= opcode->size;
 	}
 
-	std::cerr << "size: " << size << std::endl;
-
 	// drop it
 	uint16_t exception_table_length = file.read<uint16_t>();
-
-	std::cerr << "exception_table_length: " << exception_table_length << std::endl;
-
 	for (; exception_table_length > 0; exception_table_length--)
 		file.read(8);
 
@@ -67,6 +60,16 @@ attribute_info *attribute::get_element_Code(class file& file, class cp& cp)
 		delete attribute::parse(file, cp);
 
 	return new Code_attribute(max_stack, max_locals, code);
+}
+
+attribute_info *attribute::get_element_LineNumberTable(class file& file __attribute__((unused)), class cp& cp __attribute__((unused)))
+{
+	// drop it
+	uint16_t size = file.read<uint16_t>();
+	for (; size > 0; size--)
+		file.read(4);
+
+	return new LineNumberTable_attribute();
 }
 
 #define attribute_macro(name)						\

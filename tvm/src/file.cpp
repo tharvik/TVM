@@ -1,6 +1,10 @@
 #include "file.hpp"
 
-file::file(std::string path) : input(path, std::ifstream::binary) {}
+#include <iostream>
+
+file::file(std::string path)
+: input(path, std::ifstream::binary)
+{}
 
 template <typename type, size_t length>
 type file::read()

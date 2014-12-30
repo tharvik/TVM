@@ -19,6 +19,9 @@ public:
 	type get(uint16_t index) const;
 
 	enum tag {
+		CONSTANT_Fieldref = 9,
+		CONSTANT_Methodref = 10,
+		CONSTANT_InterfaceMethodref = 11,
 #define cp_macro(name, id)	\
 	name = id,
 #include "../macro/cp.m"
@@ -44,6 +47,8 @@ class cp_info
 public:
 	virtual ~cp_info() {}
 };
+
+#include "type.hpp"
 
 #include <cstdint>
 class CONSTANT_Utf8_info : public cp_info
@@ -77,30 +82,41 @@ private:
 		: name(name) {};
 };
 
-class CONSTANT_Fieldref_info : public cp_info
+class CONSTANT_NameAndType_info : public cp_info
 {
 public:
-	static class CONSTANT_Fieldref_info * parse(class file &file, class cp const &cp);
-	CONSTANT_Class_info const * const clss;
-	CONSTANT_NameAndType_info const * const name_and_type;
+
+	static class CONSTANT_NameAndType_info * parse(class file &file, class cp const &cp);
+	std::string const name;
+	std::vector<type*> const types;
 
 private:
-	CONSTANT_Fieldref_info(CONSTANT_Class_info *clss, CONSTANT_NameAndType_info *name_and_type)
-		: clss(clss), name_and_type(name_and_type)
-		{}
+	CONSTANT_NameAndType_info(std::string name, std::vector<type*> types)
+		: name(name), types(types) {};
 };
 
-class CONSTANT_Methodref_info : public cp_info
+class ref_info : public cp_info
 {
 public:
-	static class CONSTANT_Methodref_info * parse(class file &file, class cp const &cp);
+	static class ref_info * parse(class file &file, class cp const &cp);
 	CONSTANT_Class_info const * const clss;
 	CONSTANT_NameAndType_info const * const name_and_type;
 
 private:
-	CONSTANT_Methodref_info(CONSTANT_Class_info *clss, CONSTANT_NameAndType_info *name_and_type)
+	ref_info(CONSTANT_Class_info *clss, CONSTANT_NameAndType_info *name_and_type)
 		: clss(clss), name_and_type(name_and_type)
-		{}
+	{}
+};
+
+class CONSTANT_String_info : public cp_info
+{
+public:
+	static class CONSTANT_String_info * parse(class file &file, class cp const &cp);
+	std::string const value;
+
+private:
+	CONSTANT_String_info(std::string value)
+		: value(value) {};
 };
 
 #endif
