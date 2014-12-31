@@ -13,12 +13,17 @@ void vm::exec(class bc const &bc, std::vector<opcode::base*> ops)
 }
 
 
-void vm::pc_goto(uint32_t index)
+void vm::pc_goto(int32_t index)
 {
 	uint32_t i = pc - 1;
 
-	for (; index > 0; i++)
-		index -= ops.at(i)->size;
-
+	if (index < 0) {
+		for (; index < 0; i--)
+			index += ops.at(i)->size;
+		i-=2;
+	} else {
+		for (; index > 0; i++)
+			index -= ops.at(i)->size;
+	}
 	pc = i;
 }

@@ -40,7 +40,7 @@ std::vector<opcode::base*> bc::get_main() const
 			break;
 		}
 
- 	class Code_attribute * code = dynamic_cast<class Code_attribute* >(attributes.at(0));
+ 	class Code_attribute * code = util::dn<class Code_attribute* >(attributes.at(0));
 
 	return code->code;
 }

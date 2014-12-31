@@ -29,7 +29,7 @@ namespace opcode
 		base(short size) : size(size) {}
 	};
 
-#define iconst_macro(num)			\
+#define load_macro(num)			\
 	class iconst_##num : public base		\
 	{						\
 	public:						\
@@ -39,13 +39,13 @@ namespace opcode
 	private:					\
 		iconst_##num() : base(1) {}		\
 	};
-	iconst_macro(0)
-	iconst_macro(1)
-	iconst_macro(2)
-	iconst_macro(3)
-	iconst_macro(4)
-	iconst_macro(5)
-#undef iconst_macro
+	load_macro(0)
+	load_macro(1)
+	load_macro(2)
+	load_macro(3)
+	load_macro(4)
+	load_macro(5)
+#undef load_macro
 
 #define opcode_with_index(name, size, type)			\
 	class name : public base {				\
@@ -59,9 +59,13 @@ namespace opcode
 	};
 	opcode_with_index(invokespecial, 3, uint16_t)
 	opcode_with_index(invokevirtual, 3, uint16_t)
+
+	opcode_with_index(getfield, 3, uint16_t)
 	opcode_with_index(getstatic, 3, uint16_t)
+
 	opcode_with_index(ldc, 2, uint8_t)
 	opcode_with_index(op_new, 3, uint16_t)
+	opcode_with_index(putfield, 3, uint16_t)
 #undef opcode_with_index
 
 
@@ -74,9 +78,26 @@ namespace opcode
 	private:					\
 		name() : base(1) {}			\
 	};
+	opcode_trivial(aload_0)
+	opcode_trivial(aload_1)
+	opcode_trivial(aload_2)
+	opcode_trivial(aload_3)
+
+	opcode_trivial(astore_0)
+	opcode_trivial(astore_1)
+	opcode_trivial(astore_2)
+	opcode_trivial(astore_3)
+
+	opcode_trivial(areturn)
 	opcode_trivial(dup)
 	opcode_trivial(iadd)
 	opcode_trivial(ireturn)
+	opcode_trivial(isub)
+
+	opcode_trivial(iload_0)
+	opcode_trivial(iload_1)
+	opcode_trivial(iload_2)
+	opcode_trivial(iload_3)
 
 	opcode_trivial(istore_0)
 	opcode_trivial(istore_1)
@@ -94,14 +115,18 @@ namespace opcode
 		static name *parse(file& file);		\
 		void exec(class bc const &bc) const;	\
 	private:					\
-		uint16_t const branch;			\
+		int16_t const branch;			\
 							\
-		name(uint16_t branch)			\
+		name(int16_t branch)			\
 		: base(3), branch(branch)		\
 		{}					\
 	};
 	opcode_if(if_icmpeq)
+	opcode_if(if_icmplt)
+
 	opcode_if(ifeq)
+
+	opcode_if(op_goto)
 #undef opcode_if
 
 #define opcode_macro(name, id, size)		\

@@ -23,18 +23,15 @@ void manager::init(std::string name)
 void manager::run()
 {
 	classes.at(class_name)->run_func("main");
-	vms.pop();
 }
 
 class clss *manager::get_class(std::string name)
 {
-	auto iter = classes.find(name);
+	class clss *cls;
+	if (name == "java/lang/StringBuilder")
+		cls = new StringBuilder();
+	else
+		cls = new clss(name);
 
-	if (iter != classes.end())
-		return iter->second;
-
-	class clss *cls = new clss(name);
-	classes.insert(std::make_pair(name, cls));
-
-	return classes.at(name);
+	return cls;
 };

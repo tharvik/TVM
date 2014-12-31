@@ -18,12 +18,12 @@ public:
 
 	~field();
 
+	std::vector<class field_info*> const fields;
+
 private:
 	static field_info *get_element(class file& file, class cp &cp);
 
 	field(std::vector<class field_info*> fields) : fields(fields) {}
-
-	std::vector<class field_info*> fields;
 };
 
 class field_info
@@ -35,7 +35,7 @@ public:
 		: access_flags(access_flags), name(name),
 		  descriptor(descriptor), attributes(attributes) {}
 	~field_info();
-private:
+
 	uint16_t const access_flags;
 	std::string const name;
 	std::string const descriptor;

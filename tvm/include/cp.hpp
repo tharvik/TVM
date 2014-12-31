@@ -2,6 +2,7 @@
 #define BC_CP_HPP
 
 #include "file.hpp"
+#include "util.hpp"
 
 #include <vector>
 #include <cstdint>
@@ -37,7 +38,7 @@ template<typename type>
 type cp::get(uint16_t index) const
 {
 	cp_info *elem = elements.at(index - 1);
-	return dynamic_cast<type>(elem);
+	return util::dn<type>(elem);
 }
 
 

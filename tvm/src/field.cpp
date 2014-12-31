@@ -10,8 +10,6 @@ field *field::parse(file& file, cp &cp)
 {
 	uint16_t count = file.read<uint16_t>();
 
-	std::cout << "field: " << count << count << std::endl;
-
 	std::vector<class field_info*> fields;
 	for (; count > 0; count--) {
 		class field_info *field = get_element(file, cp);

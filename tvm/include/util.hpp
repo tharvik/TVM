@@ -1,24 +1,23 @@
-#ifndef BC_UTIL_HPP
-#define BC_UTIL_HPP
+#ifndef UTIL_HPP
+#define UTIL_HPP
 
-#include <array>
-#include <cstdint>
+#include <typeinfo>
 
 namespace util
 {
-template<typename type, int size>
-type array_to(std::array<uint8_t, size> array);
-}
+	template<typename to, typename from = void*>
+	to dn(from obj);
+};
 
-template<typename type, int size>
-type util::array_to(std::array<uint8_t, size> array)
+template<typename to, typename from>
+to util::dn(from obj)
 {
-	type res = 0;
+	to ptr = dynamic_cast<to>(obj);
 
-	for (uint8_t byte : array)
-		res = (res << 8) | byte;
+	if (ptr == nullptr)
+		throw std::bad_cast();
 
-	return res;
+	return ptr;
 }
 
-#endif
+#endif // UTIL_HPP

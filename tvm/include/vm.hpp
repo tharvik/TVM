@@ -16,6 +16,7 @@ namespace stack_elem
 	{
 	public:
 		virtual ~base() {}
+		virtual stack_elem::base *copy() = 0;
 	};
 
 #define macro_val_const(name, type)				\
@@ -24,6 +25,7 @@ namespace stack_elem
 	public:							\
 		name##_const(type value) : value(value) {}	\
 		type const value;				\
+		stack_elem::base *copy() {return new name##_const(value);}\
 	};
 	macro_val_const(int, int)
 	macro_val_const(string, std::string)
@@ -34,6 +36,8 @@ namespace stack_elem
 	public:
 		class_ref(class clss *cls) : cls(cls) {}
 		class clss *cls;
+
+		stack_elem::base *copy() {return new class_ref(cls);}
 	};
 
 	class print_class : public class_ref
@@ -67,7 +71,7 @@ public:
 	std::vector<class stack_elem::base*> vars;
 	class class_pool class_pool;
 
-	void pc_goto(uint32_t index);
+	void pc_goto(int32_t index);
 
 private:
 	uint32_t pc;

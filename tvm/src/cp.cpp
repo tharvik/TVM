@@ -68,10 +68,10 @@ class CONSTANT_Utf8_info *CONSTANT_Utf8_info::parse(class file &file, class cp c
 class CONSTANT_Class_info *CONSTANT_Class_info::parse(class file &file, class cp const &cp)
 {
 	uint16_t index = file.read<uint16_t>();
-	CONSTANT_Utf8_info &utf8
-		= dynamic_cast<CONSTANT_Utf8_info&>(*cp.get(index));
+	CONSTANT_Utf8_info *utf8
+		= util::dn<CONSTANT_Utf8_info*>(cp.get(index));
 
-	return new CONSTANT_Class_info(utf8.value);
+	return new CONSTANT_Class_info(utf8->value);
 };
 
 class ref_info *ref_info::parse(class file &file, class cp const &cp)
@@ -107,6 +107,7 @@ class CONSTANT_NameAndType_info *CONSTANT_NameAndType_info::parse(class file& fi
 
 		case 'V': type = new type_void(); break;
 		case 'I': type = new type_int(); break;
+		case 'Z': type = new type_int(); break;
 
 		case '(': continue;
 		case ')': continue;
