@@ -10,7 +10,6 @@ class self
 public:
 	self(class file &file);
 
-private:
 	uint16_t access_flags;
 	uint16_t this_class;
 	uint16_t super_class;

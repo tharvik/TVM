@@ -27,22 +27,23 @@ static class type* char_to_type(std::string::iterator &iter)
 	case 'L': {
 		std::string class_name;
 		while (*iter != ';') class_name += *iter++;
-		type = new type_class(class_name);
+		type = type::get(class_name);
 		break;
 	}
 
 	case 'V':
-		type = new type_void();
+		type = type::get(type::VOID);
 		break;
 	case 'I':
-		type = new type_int();
+		type = type::get(type::INT);
 		break;
 	case 'Z':
-		type = new type_bool();
+		type = type::get(type::BOOL);
 		break;
 
 	case '[':
-		type = new type_array(char_to_type(++iter));
+		type = type::get(char_to_type(++iter));
+		break;
 
 	case '(':
 		break;

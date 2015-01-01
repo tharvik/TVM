@@ -26,7 +26,7 @@ clss::clss(std::string name)
 	for (class method_info *info : bc->methods->meths) {
 		Code_attribute *code = util::dn<Code_attribute*>(info->attributes.at(0));
 
-		meths.insert(std::make_pair(info, code));
+		meths.insert(std::make_pair(std::make_pair(info->name, info->types), code));
 	}
 
 	for (class field_info *info : bc->field->fields) {
@@ -48,45 +48,24 @@ clss::clss(std::string name)
 
 		fields.insert(std::make_pair(info->name, elem));
 	}
+
+	class CONSTANT_Class_info *info = bc->cp.get<class CONSTANT_Class_info*>(bc->self.super_class);
+	if (info->name == "java/lang/Object")
+		return;
+
+	clss *cls = new clss(info->name);
+	for (auto p : cls->meths)
+		meths.insert(p);
+	for (auto p : cls->fields)
+		fields.insert(p);
 }
 
-void clss::run_func(class method_info const * const meth)
+void clss::run_func(std::string name, std::vector<type*> types)
 {
 	class vm &vm = manager::vms.top();
-	class Code_attribute *attr = meths.at(meth);
+	class Code_attribute *attr = meths.at(std::make_pair(name, types));
 	vm.vars.resize(attr->max_locals);
 	vm.exec(*bc, attr->code);
-}
-
-void clss::run_func(class ref_info const * const meth)
-{
-	for (class method_info const * const info : bc->methods->meths) {
-		if (info->name == meth->name_and_type->name) {
-			run_func(info);
-		}
-	}
-}
-
-void clss::run_main()
-{
-	for (auto iter : meths) {
-		class method_info const * const info = iter.first;
-
-		if (info->name == "main") {
-			run_func(info);
-			break;
-		}
-	}
-}
-
-void optimized_clss::run_func(class method_info const * const meth)
-{
-	run_func(meth->name, meth->types);
-}
-
-void optimized_clss::run_func(class ref_info const * const meth)
-{
-	run_func(meth->name_and_type->name, meth->name_and_type->types);
 }
 
 void print_clss::run_func(std::string name, std::vector<type*> types)
@@ -104,11 +83,13 @@ void print_clss::run_func(std::string name, std::vector<type*> types)
 	}
 
 	stack_elem::int_const *val = dynamic_cast<stack_elem::int_const*>(elem);
-	class type *resolved_type;
-	if ((resolved_type = dynamic_cast<type_int*>(types.at(0))) != nullptr)
+	class type_elem *resolved_type;
+	if ((resolved_type = dynamic_cast<type_elem*>(types.at(0))) != nullptr
+		&& resolved_type->elm == type::INT)
 		std::cout << val->value << std::endl;
 
-	else if ((resolved_type = dynamic_cast<type_bool*>(types.at(0))) != nullptr) {
+	else if ((resolved_type = dynamic_cast<type_elem*>(types.at(0))) != nullptr
+		&& resolved_type->elm == type::BOOL) {
 		if(val->value) {
 			std::cout << "true" << std::endl;
 		} else {

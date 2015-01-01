@@ -27,7 +27,16 @@ class vm& manager::get_vm()
 
 void manager::run()
 {
-	classes.at(class_name)->run_main();
+	std::vector<type*> types;
+
+	class type *str = type::get("Ljava/lang/String");
+	class type *arr = type::get(str);
+	types.push_back(arr);
+
+	class type *vod = type::get(type::VOID);
+	types.push_back(vod);
+
+	classes.at(class_name)->run_func("main", types);
 }
 
 class clss *manager::get_class(std::string name)

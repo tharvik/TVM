@@ -180,9 +180,9 @@ void opcode::pop::exec(class bc const &bc __attribute__ ((unused))) const
 
 void opcode::invokevirtual::exec(class bc const &bc) const
 {
-	log_name("invokevirtual");
-
 	ref_info * meth = bc.cp.get<ref_info*>(index);
+
+	log_name("invokevirtual\t\t" + meth->name_and_type->name);
 
 	std::stack<class stack_elem::base*> &old_stack = manager::vms.top().stack;
 
@@ -204,7 +204,7 @@ void opcode::invokevirtual::exec(class bc const &bc) const
 	class vm &vm = manager::vms.top();
 	vm.vars = args;
 
-	cls->run_func(meth);
+	cls->run_func(meth->name_and_type->name, meth->name_and_type->types);
 }
 
 void opcode::op_new::exec(class bc const &bc) const
