@@ -17,6 +17,8 @@ public:
 
 	std::vector<class method_info*> const meths;
 
+	static std::vector<class type*> descriptor_to_type(std::string descriptor);
+
 private:
 	static method_info *parse_meth(class file &file, class cp &cp);
 
@@ -28,15 +30,15 @@ class method_info
 {
 public:
 	method_info(uint16_t access_flags, std::string name,
-		    std::string descriptor,
+		    std::vector<class type*> types,
 		    std::vector<class attribute_info*> attributes)
 		: access_flags(access_flags), name(name),
-		  descriptor(descriptor), attributes(attributes)
+		  types(types), attributes(attributes)
 	{}
 
 	uint16_t const access_flags;
 	std::string const name;
-	std::string const descriptor;
+	std::vector<class type*> types;
 
 	std::vector<class attribute_info*> const attributes;
 };

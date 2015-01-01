@@ -8,22 +8,27 @@ void vm::exec(class bc const &bc, std::vector<opcode::base*> ops)
 
 	pc = 0;
 
-	while (pc < ops.size())
-		ops.at(pc++)->exec(bc);
+	while (pc < ops.size()) {
+		ops.at(pc)->exec(bc);
+		pc++;
+	}
 }
 
-
+#include <cassert>
 void vm::pc_goto(int32_t index)
 {
-	uint32_t i = pc - 1;
+	uint32_t i = pc;
 
-	if (index < 0) {
-		for (; index < 0; i--)
-			index += ops.at(i)->size;
-		i-=2;
-	} else {
+	if (index > 0) {
 		for (; index > 0; i++)
 			index -= ops.at(i)->size;
+	} else {
+		i--;
+		for(; index < 0; i--)
+			index += ops.at(i)->size;
+		i++;
 	}
+	i--;
+
 	pc = i;
 }

@@ -4,6 +4,7 @@
 #include <stack>
 #include <cstdint>
 #include <string>
+#include <array>
 #include <vector>
 #include <map>
 
@@ -19,17 +20,33 @@ namespace stack_elem
 		virtual stack_elem::base *copy() = 0;
 	};
 
-#define macro_val_const(name, type)				\
+#define macro_val_const(name, type, by_default)			\
 	class name##_const : public base			\
 	{							\
 	public:							\
+		name##_const() : value(by_default) {}		\
 		name##_const(type value) : value(value) {}	\
 		type const value;				\
 		stack_elem::base *copy() {return new name##_const(value);}\
 	};
-	macro_val_const(int, int)
-	macro_val_const(string, std::string)
+	macro_val_const(int, int, 0)
+	macro_val_const(bool, bool, 0)
+	macro_val_const(string, std::string, "")
 #undef macro_val_const
+
+	class array_ref : public base
+	{
+	public:
+		array_ref(uint32_t size) {
+			vec.resize(size);
+		}
+
+		std::vector<stack_elem::int_const*> vec;
+
+		stack_elem::base *copy() {
+			return new array_ref(vec.size());
+		}
+	};
 
 	class class_ref : public base
 	{

@@ -20,9 +20,14 @@ void manager::init(std::string name)
 	vms.push(vm());
 }
 
+class vm& manager::get_vm()
+{
+	return vms.top();
+};
+
 void manager::run()
 {
-	classes.at(class_name)->run_func("main");
+	classes.at(class_name)->run_main();
 }
 
 class clss *manager::get_class(std::string name)

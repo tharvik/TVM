@@ -1,6 +1,7 @@
 #include "cp.hpp"
 
 #include "bc.hpp"
+#include "methods.hpp"
 
 #include <iostream>
 
@@ -93,31 +94,7 @@ class CONSTANT_NameAndType_info *CONSTANT_NameAndType_info::parse(class file& fi
 	std::string name = cp.get<CONSTANT_Utf8_info*>(name_index)->value;
 	std::string descriptor = cp.get<CONSTANT_Utf8_info*>(desciptor_index)->value;
 
-	std::vector<type*> types;
-
-	for (auto i = descriptor.begin(); i != descriptor.end(); i++) {
-		class type *type;
-		switch(*i) {
-		case 'L': {
-			std::string class_name;
-			while (*i != ';') class_name += *i++;
-			type = new type_class(class_name);
-			break;
-		}
-
-		case 'V': type = new type_void(); break;
-		case 'I': type = new type_int(); break;
-		case 'Z': type = new type_int(); break;
-
-		case '(': continue;
-		case ')': continue;
-
-		default:
-			std::cerr << "Unknow type: " << *i << std::endl;
-		}
-
-		types.push_back(type);
-	}
+	std::vector<type*> types = methods::descriptor_to_type(descriptor);
 
 	return new CONSTANT_NameAndType_info(name, types);
 };

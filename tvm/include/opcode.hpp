@@ -60,11 +60,18 @@ namespace opcode
 	opcode_with_index(invokespecial, 3, uint16_t)
 	opcode_with_index(invokevirtual, 3, uint16_t)
 
+	opcode_with_index(astore, 2, uint8_t)
+	opcode_with_index(istore, 2, uint8_t)
+
+	opcode_with_index(aload, 2, uint8_t)
+	opcode_with_index(iload, 2, uint8_t)
+
 	opcode_with_index(getfield, 3, uint16_t)
 	opcode_with_index(getstatic, 3, uint16_t)
 
 	opcode_with_index(ldc, 2, uint8_t)
 	opcode_with_index(op_new, 3, uint16_t)
+	opcode_with_index(newarray, 2, uint8_t)
 	opcode_with_index(putfield, 3, uint16_t)
 #undef opcode_with_index
 
@@ -91,8 +98,13 @@ namespace opcode
 	opcode_trivial(areturn)
 	opcode_trivial(dup)
 	opcode_trivial(iadd)
+	opcode_trivial(idiv)
+	opcode_trivial(imul)
 	opcode_trivial(ireturn)
 	opcode_trivial(isub)
+
+	opcode_trivial(iaload)
+	opcode_trivial(iastore)
 
 	opcode_trivial(iload_0)
 	opcode_trivial(iload_1)
@@ -141,16 +153,20 @@ namespace opcode
 #include "../macro/opcode_unchecked.m"
 #undef opcode_macro
 
-	class bipush : public base
-	{
-	public:
-		uint8_t const byte;
-
-		static class bipush *parse(file& file);
-		void exec(class bc const &bc) const;
-	private:
-		bipush(uint8_t byte) : base(2), byte(byte) {}
+#define macro_push(name, size, type)				\
+	class name : public base				\
+	{							\
+	public:							\
+		type const byte;				\
+								\
+		static class name *parse(file& file);		\
+		void exec(class bc const &bc) const;		\
+	private:						\
+		name(type byte) : base(size), byte(byte) {}	\
 	};
+	macro_push(bipush, 2, uint8_t)
+	macro_push(sipush, 3, uint16_t)
+#undef macro_push
 };
 
 #endif

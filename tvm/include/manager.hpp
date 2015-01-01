@@ -16,6 +16,8 @@ public:
 
 	static class clss *get_class(std::string name);
 
+	static class vm& get_vm();
+
 	static std::stack<class vm> vms;
 
 private:

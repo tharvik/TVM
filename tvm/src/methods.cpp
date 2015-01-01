@@ -19,6 +19,58 @@ methods *methods::parse(class file &file, class cp &cp)
 	return new methods(meths);
 }
 
+static class type* char_to_type(std::string::iterator &iter)
+{
+	class type *type = nullptr;
+
+	switch(*iter) {
+	case 'L': {
+		std::string class_name;
+		while (*iter != ';') class_name += *iter++;
+		type = new type_class(class_name);
+		break;
+	}
+
+	case 'V':
+		type = new type_void();
+		break;
+	case 'I':
+		type = new type_int();
+		break;
+	case 'Z':
+		type = new type_bool();
+		break;
+
+	case '[':
+		type = new type_array(char_to_type(++iter));
+
+	case '(':
+		break;
+	case ')':
+		break;
+
+	default:
+		std::cerr << "Unknow type: " << *iter << std::endl;
+		throw "unknow type";
+	}
+
+	return type;
+}
+
+std::vector<class type*> methods::descriptor_to_type(std::string descriptor)
+{
+	std::vector<type*> types;
+
+	for (auto i = descriptor.begin(); i != descriptor.end(); i++) {
+		class type* tpe = char_to_type(i);
+		if(tpe == nullptr) continue;
+
+		types.push_back(tpe);
+	}
+
+	return types;
+}
+
 method_info *methods::parse_meth(class file &file, class cp &cp)
 {
 	uint16_t access_flags;
@@ -36,5 +88,7 @@ method_info *methods::parse_meth(class file &file, class cp &cp)
 	for (; attributes_count > 0; attributes_count--)
 		attributes.push_back(attribute::parse(file, cp));
 
-	return new method_info(access_flags, name, descriptor, attributes);
+	std::vector<class type*> types = descriptor_to_type(descriptor);
+
+	return new method_info(access_flags, name, types, attributes);
 }
