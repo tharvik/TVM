@@ -204,7 +204,7 @@ void opcode::invokevirtual::exec(class bc const &bc) const
 	class vm &vm = manager::vms.top();
 	vm.vars = args;
 
-	cls->run_func(meth->name_and_type->name, meth->name_and_type->types);
+	cls->run_func(meth->clss->name, meth->name_and_type->name, meth->name_and_type->types);
 }
 
 void opcode::op_new::exec(class bc const &bc) const
@@ -409,12 +409,24 @@ void opcode::if_acmp##name::exec(class bc const& bc __attribute__ ((unused))) co
 	log_name("if_acmp" #name);				\
 								\
 	class vm &vm = manager::vms.top();			\
-	class stack_elem::class_ref *value1, *value2;		\
 								\
-	value2 = util::dn<class stack_elem::class_ref*>(vm.stack.top()); vm.stack.pop();\
-	value1 = util::dn<class stack_elem::class_ref*>(vm.stack.top()); vm.stack.pop();\
+	bool comp = false;					\
+	if (dynamic_cast<class stack_elem::class_ref*>(vm.stack.top()) != nullptr) {\
+		class stack_elem::class_ref *value1, *value2;	\
+		value2 = util::dn<class stack_elem::class_ref*>(vm.stack.top()); vm.stack.pop();\
+		value1 = util::dn<class stack_elem::class_ref*>(vm.stack.top()); vm.stack.pop();\
 								\
-	if (value1->cls op value2->cls)				\
+		comp = value1->cls op value2->cls;		\
+	} else if (dynamic_cast<class stack_elem::string_const*>(vm.stack.top()) != nullptr) {\
+		class stack_elem::string_const *value1, *value2;\
+		value2 = util::dn<class stack_elem::string_const*>(vm.stack.top()); vm.stack.pop();\
+		value1 = util::dn<class stack_elem::string_const*>(vm.stack.top()); vm.stack.pop();\
+								\
+		comp = &value1 op &value2;			\
+	} else							\
+		throw "Unknow value to cast";			\
+								\
+	if(comp)						\
 		vm.pc_goto(branch);				\
 }
 opcode_if(eq, ==)

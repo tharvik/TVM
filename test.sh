@@ -51,7 +51,7 @@ match() {
 	reference "${l}"
 	generate "${l}"
 
-	diff "${l}"_{tes,ref}
+	diff "${l}"_{ref,tes}
 	check $?
 
 	rm *class{_{tes,ref},}

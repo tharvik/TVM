@@ -36,7 +36,7 @@ void manager::run()
 	class type *vod = type::get(type::VOID);
 	types.push_back(vod);
 
-	classes.at(class_name)->run_func("main", types);
+	classes.at(class_name)->run_func(class_name, "main", types);
 }
 
 class clss *manager::get_class(std::string name)

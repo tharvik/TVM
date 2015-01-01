@@ -41,7 +41,6 @@ type cp::get(uint16_t index) const
 	return util::dn<type>(elem);
 }
 
-
 #include <cstdint>
 class cp_info
 {

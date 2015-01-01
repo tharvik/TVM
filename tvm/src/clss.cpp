@@ -51,24 +51,28 @@ clss::clss(std::string name)
 
 	class CONSTANT_Class_info *info = bc->cp.get<class CONSTANT_Class_info*>(bc->self.super_class);
 	if (info->name == "java/lang/Object")
-		return;
-
-	clss *cls = new clss(info->name);
-	for (auto p : cls->meths)
-		meths.insert(p);
-	for (auto p : cls->fields)
-		fields.insert(p);
+		parent = nullptr;
+	else
+		parent = new clss(info->name);
 }
 
-void clss::run_func(std::string name, std::vector<type*> types)
+void clss::run_func(std::string class_name, std::string name, std::vector<type*> types)
 {
-	class vm &vm = manager::vms.top();
-	class Code_attribute *attr = meths.at(std::make_pair(name, types));
-	vm.vars.resize(attr->max_locals);
-	vm.exec(*bc, attr->code);
+	class vm &vm = manager::get_vm();
+
+	auto i = meths.find(std::make_pair(name, types));
+
+	if (i == meths.end()) {
+		parent->run_func(class_name, name, types);
+	} else {
+		class Code_attribute *attr = i->second;
+		vm.vars.resize(attr->max_locals);
+
+		vm.exec(*bc, attr->code);
+	}
 }
 
-void print_clss::run_func(std::string name, std::vector<type*> types)
+void print_clss::run_func(std::string class_name, std::string name, std::vector<type*> types)
 {
 	if(name != "println")
 		throw "Unimplemented printing func";
@@ -85,11 +89,11 @@ void print_clss::run_func(std::string name, std::vector<type*> types)
 	stack_elem::int_const *val = dynamic_cast<stack_elem::int_const*>(elem);
 	class type_elem *resolved_type;
 	if ((resolved_type = dynamic_cast<type_elem*>(types.at(0))) != nullptr
-		&& resolved_type->elm == type::INT)
+	    && resolved_type->elm == type::INT)
 		std::cout << val->value << std::endl;
 
 	else if ((resolved_type = dynamic_cast<type_elem*>(types.at(0))) != nullptr
-		&& resolved_type->elm == type::BOOL) {
+		 && resolved_type->elm == type::BOOL) {
 		if(val->value) {
 			std::cout << "true" << std::endl;
 		} else {
@@ -111,7 +115,7 @@ class stack_elem::base *clss::get_field(std::string name)
 	return fields.at(name);
 }
 
-void StringBuilder::run_func(std::string name, std::vector<type*> types)
+void StringBuilder::run_func(std::string class_name, std::string name, std::vector<type*> types)
 {
 	stack_elem::base *elem = nullptr;
 	if (name == "append") {

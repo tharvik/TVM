@@ -9,13 +9,14 @@
 
 #include <map>
 #include <vector>
+#include <list>
 
 class clss
 {
 public:
 	clss(std::string name);
 
-	virtual void run_func(std::string name, std::vector<type*> types);
+	virtual void run_func(std::string class_name, std::string name, std::vector<type*> types);
 
 	class stack_elem::base *get_field(std::string name);
 	void put_field(std::string name, class stack_elem::base *elem);
@@ -27,7 +28,8 @@ private:
 	std::map<std::pair<std::string, std::vector<type*>>, Code_attribute*> meths;
 	std::map<std::string, class stack_elem::base*> fields;
 
-	class bc *bc;
+	class bc* bc;
+	class clss *parent;
 
 	std::string name;
 };
@@ -35,13 +37,13 @@ private:
 class print_clss : public clss
 {
 private:
-	void run_func(std::string name, std::vector<type*> types);
+	void run_func(std::string class_name, std::string name, std::vector<type*> types);
 };
 
 class StringBuilder : public clss
 {
 private:
-	void run_func(std::string name, std::vector<type*> types);
+	void run_func(std::string class_name, std::string name, std::vector<type*> types);
 
 	class stack_elem::class_ref *append(class stack_elem::int_const* elem);
 	class stack_elem::class_ref *append(class stack_elem::string_const* elem);
