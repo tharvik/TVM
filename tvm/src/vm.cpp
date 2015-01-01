@@ -14,7 +14,6 @@ void vm::exec(class bc const &bc, std::vector<opcode::base*> ops)
 	}
 }
 
-#include <cassert>
 void vm::pc_goto(int32_t index)
 {
 	uint32_t i = pc;

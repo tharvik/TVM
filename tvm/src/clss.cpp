@@ -19,6 +19,8 @@ clss::clss()
 clss::clss(std::string name)
 	: bc(bc::parse(name + ".class"))
 {
+	this->name = name;
+
 	std::cerr << "--> load new class: " << name << std::endl;
 
 	for (class method_info *info : bc->methods->meths) {
@@ -29,17 +31,20 @@ clss::clss(std::string name)
 
 	for (class field_info *info : bc->field->fields) {
 
-		std::cerr << "adding field: " << info->name << std::endl;
-
 		stack_elem::base *elem;
-		switch (info->descriptor.at(0)) {
-		case 'I':
-			elem = new stack_elem::int_const(0);
-			break;
-		default:
-			std::cerr << "field unknow type: " << info->descriptor << std::endl;
-			throw "field unknow type";
-		}
+
+		elem = nullptr;
+
+//		if(dynamic_cast<type_int*>(info->type) != nullptr)
+//			elem = new stack_elem::int_const(0);
+//		else if(dynamic_cast<type_array*>(info->type) != nullptr)
+//			elem = new stack_elem::array_ref(0);
+//		else if(dynamic_cast<type_class*>(info->type) != nullptr)
+//			elem = new stack_elem::array_ref(0);
+//		else {
+//			std::cerr << "field unknow type for return" << std::endl;
+//			throw "field unknow type";
+//		}
 
 		fields.insert(std::make_pair(info->name, elem));
 	}
@@ -103,11 +108,13 @@ void print_clss::run_func(std::string name, std::vector<type*> types)
 	if ((resolved_type = dynamic_cast<type_int*>(types.at(0))) != nullptr)
 		std::cout << val->value << std::endl;
 
-	if ((resolved_type = dynamic_cast<type_bool*>(types.at(0))) != nullptr)
-		if(val->value)
+	else if ((resolved_type = dynamic_cast<type_bool*>(types.at(0))) != nullptr) {
+		if(val->value) {
 			std::cout << "true" << std::endl;
-		else
+		} else {
 			std::cout << "false" << std::endl;
+		}
+	}
 
 	manager::vms.pop();
 }

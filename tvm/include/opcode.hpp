@@ -96,6 +96,7 @@ namespace opcode
 	opcode_trivial(astore_3)
 
 	opcode_trivial(areturn)
+	opcode_trivial(arraylength)
 	opcode_trivial(dup)
 	opcode_trivial(iadd)
 	opcode_trivial(idiv)
@@ -118,6 +119,7 @@ namespace opcode
 
 	opcode_trivial(op_return)
 	opcode_trivial(pop)
+	opcode_trivial(swap)
 #undef opcode_trivial
 
 #define opcode_if(name)					\
@@ -133,10 +135,22 @@ namespace opcode
 		: base(3), branch(branch)		\
 		{}					\
 	};
+	opcode_if(if_acmpeq)
+	opcode_if(if_acmpne)
+
 	opcode_if(if_icmpeq)
+	opcode_if(if_icmpne)
 	opcode_if(if_icmplt)
+	opcode_if(if_icmpge)
+	opcode_if(if_icmpgt)
+	opcode_if(if_icmple)
 
 	opcode_if(ifeq)
+	opcode_if(ifne)
+	opcode_if(iflt)
+	opcode_if(ifge)
+	opcode_if(ifgt)
+	opcode_if(ifle)
 
 	opcode_if(op_goto)
 #undef opcode_if

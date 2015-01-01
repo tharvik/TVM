@@ -108,6 +108,15 @@ class CONSTANT_String_info *CONSTANT_String_info::parse(class file& file, class 
 	return new CONSTANT_String_info(utf8->value);
 };
 
+class CONSTANT_Integer_info *CONSTANT_Integer_info::parse(class file& file, class cp const& cp __attribute__ ((unused)))
+{
+	uint32_t value;
+
+	value = file.read<uint32_t>();
+
+	return new CONSTANT_Integer_info(value);
+};
+
 
 #define cp_macro(name, id, size)				\
 class name##_info * name##_info::parse(				\
@@ -115,10 +124,7 @@ class name##_info * name##_info::parse(				\
 		class cp const &cp __attribute__ ((unused)))	\
 {								\
 	std::cerr << "Unchecked add_" #name << std::endl;	\
-								\
-	file.read(size - 1);					\
-								\
-	return nullptr;						\
+	throw "unchecked add_" #name;				\
 }
 #include "../macro/cp_unchecked.m"
 #undef cp_macro

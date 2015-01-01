@@ -120,4 +120,15 @@ private:
 		: value(value) {};
 };
 
+class CONSTANT_Integer_info : public cp_info
+{
+public:
+	static class CONSTANT_Integer_info * parse(class file &file, class cp const &cp);
+	uint32_t const value;
+
+private:
+	CONSTANT_Integer_info(uint32_t value)
+		: value(value) {};
+};
+
 #endif

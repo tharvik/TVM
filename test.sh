@@ -52,6 +52,9 @@ match() {
 	generate "${l}"
 
 	diff "${l}"_{tes,ref}
+	check $?
+
+	rm *class{_{tes,ref},}
 
 	echo
 }

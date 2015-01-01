@@ -30,6 +30,8 @@ private:
 	std::map<std::string, class stack_elem::base*> fields;
 
 	class bc *bc;
+
+	std::string name;
 };
 
 class optimized_clss : public clss

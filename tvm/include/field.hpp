@@ -30,15 +30,15 @@ class field_info
 {
 public:
 	field_info(uint16_t access_flags, std::string name,
-		   std::string descriptor,
+		   class type * const type,
 		   std::vector<attribute_info*> attributes)
 		: access_flags(access_flags), name(name),
-		  descriptor(descriptor), attributes(attributes) {}
+		  type(type), attributes(attributes) {}
 	~field_info();
 
 	uint16_t const access_flags;
 	std::string const name;
-	std::string const descriptor;
+	class type * const type;
 	std::vector<attribute_info*> const attributes;
 };
 

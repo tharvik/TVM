@@ -35,7 +35,6 @@ void opcode::name::exec(class bc const &bc __attribute__ ((unused))) const	\
 	stack_elem::int_const* a = util::dn<stack_elem::int_const*>(vm.stack.top());\
 	vm.stack.pop();								\
 										\
-	std::cerr << a->value << " " #op " " << b->value << std::endl;		\
 	vm.stack.push(new stack_elem::int_const(a->value op b->value));		\
 }
 opcode_macro(iadd, +)
@@ -53,14 +52,38 @@ void opcode::dup::exec(class bc const &bc __attribute__ ((unused))) const
 	vm.stack.push(vm.stack.top());
 }
 
+void opcode::swap::exec(class bc const &bc __attribute__ ((unused))) const
+{
+	log_name("swap");
+
+	class vm &vm = manager::vms.top();
+
+	stack_elem::base* a = vm.stack.top();
+	vm.stack.pop();
+	stack_elem::base* b = vm.stack.top();
+	vm.stack.pop();
+
+	vm.stack.push(a);
+	vm.stack.push(b);
+}
+
 void opcode::ldc::exec(class bc const &bc) const
 {
 	log_name("ldc");
 
 	class vm &vm = manager::vms.top();
-	class CONSTANT_String_info *info = bc.cp.get<CONSTANT_String_info*>(index);
 
-	vm.stack.push(new stack_elem::string_const(info->value));
+	class cp_info *info = bc.cp.get(index);
+	class stack_elem::base* elem = nullptr;
+
+	class CONSTANT_String_info *str;
+	class CONSTANT_Integer_info *integer;
+	if ((str = dynamic_cast<CONSTANT_String_info*>(info)))
+		elem = new stack_elem::string_const(str->value);
+	else if ((integer = dynamic_cast<CONSTANT_Integer_info*>(info)))
+		elem = new stack_elem::int_const(integer->value);
+
+	vm.stack.push(elem);
 }
 
 #define opcode_with_index(type, name)			\
@@ -115,10 +138,10 @@ void opcode::getstatic::exec(class bc const &bc __attribute__ ((unused))) const
 
 void opcode::getfield::exec(class bc const &bc __attribute__ ((unused))) const
 {
-	log_name("getfield");
-
 	class vm &vm = manager::vms.top();
 	class ref_info *info = bc.cp.get<ref_info*>(index);
+
+	log_name("getfield\t\t" + info->name_and_type->name);
 
 	class clss *cls = util::dn<stack_elem::class_ref*>(vm.stack.top())->cls;
 	vm.stack.pop();
@@ -128,13 +151,15 @@ void opcode::getfield::exec(class bc const &bc __attribute__ ((unused))) const
 
 void opcode::putfield::exec(class bc const &bc __attribute__ ((unused))) const
 {
-	log_name("putfield");
-
 	class vm &vm = manager::vms.top();
 	class ref_info *info = bc.cp.get<ref_info*>(index);
 
-	class stack_elem::base *elem = vm.stack.top(); vm.stack.pop();
-	class clss *cls = util::dn<stack_elem::class_ref*>(manager::vms.top().stack.top())->cls; vm.stack.pop();
+	log_name("putfield\t\t" + info->name_and_type->name);
+
+	class stack_elem::base *elem = vm.stack.top();
+	vm.stack.pop();
+	class clss *cls = util::dn<stack_elem::class_ref*>(vm.stack.top())->cls;
+	vm.stack.pop();
 
 	cls->put_field(info->name_and_type->name, elem);
 }
@@ -197,7 +222,12 @@ void opcode::newarray::exec(class bc const &bc __attribute__ ((unused))) const
 {
 	log_name("newarray");
 
-	manager::get_vm().stack.push(new stack_elem::array_ref(index));
+	class vm &vm = manager::get_vm();
+
+	stack_elem::int_const *count = util::dn<stack_elem::int_const*>(vm.stack.top());
+	vm.stack.pop();
+
+	manager::get_vm().stack.push(new stack_elem::array_ref(count->value));
 }
 
 #define trivial_opcode(name)							\
@@ -216,6 +246,7 @@ trivial_opcode(astore_2)
 trivial_opcode(astore_3)
 
 trivial_opcode(areturn)
+trivial_opcode(arraylength)
 trivial_opcode(dup)
 trivial_opcode(iadd)
 trivial_opcode(imul)
@@ -246,6 +277,7 @@ trivial_opcode(istore_3)
 
 trivial_opcode(op_return)
 trivial_opcode(pop)
+trivial_opcode(swap)
 #undef trivial_opcode
 
 #define load_macro(type, num)								\
@@ -351,12 +383,42 @@ opcode::name *opcode::name::parse(file& file)	\
 						\
 	return new name(branch);		\
 }
+opcode_if(if_acmpeq)
+opcode_if(if_acmpne)
+
 opcode_if(if_icmpeq)
+opcode_if(if_icmpne)
 opcode_if(if_icmplt)
+opcode_if(if_icmpge)
+opcode_if(if_icmpgt)
+opcode_if(if_icmple)
 
 opcode_if(ifeq)
+opcode_if(ifne)
+opcode_if(iflt)
+opcode_if(ifge)
+opcode_if(ifgt)
+opcode_if(ifle)
 
 opcode_if(op_goto)
+#undef opcode_if
+
+#define opcode_if(name, op)					\
+void opcode::if_acmp##name::exec(class bc const& bc __attribute__ ((unused))) const	\
+{								\
+	log_name("if_acmp" #name);				\
+								\
+	class vm &vm = manager::vms.top();			\
+	class stack_elem::class_ref *value1, *value2;		\
+								\
+	value2 = util::dn<class stack_elem::class_ref*>(vm.stack.top()); vm.stack.pop();\
+	value1 = util::dn<class stack_elem::class_ref*>(vm.stack.top()); vm.stack.pop();\
+								\
+	if (value1->cls op value2->cls)				\
+		vm.pc_goto(branch);				\
+}
+opcode_if(eq, ==)
+opcode_if(ne, !=)
 #undef opcode_if
 
 #define opcode_if(name, op)					\
@@ -370,29 +432,37 @@ void opcode::if_icmp##name::exec(class bc const& bc __attribute__ ((unused))) co
 	value2 = util::dn<class stack_elem::int_const*>(vm.stack.top()); vm.stack.pop();\
 	value1 = util::dn<class stack_elem::int_const*>(vm.stack.top()); vm.stack.pop();\
 								\
-	std::cerr << "value2: " << value2->value << std::endl;	\
-	std::cerr << "value1: " << value1->value << std::endl;	\
-	std::cerr << "res: " << (value1->value op value2->value) << std::endl;	\
-	std::cerr << "stack: " << util::dn<class stack_elem::int_const*>(vm.stack.top())->value << std::endl;	\
 	if (value1->value op value2->value)			\
 		vm.pc_goto(branch);				\
 }
 opcode_if(eq, ==)
+opcode_if(ne, !=)
 opcode_if(lt, <)
+opcode_if(ge, >=)
+opcode_if(gt, >)
+opcode_if(le, <=)
 #undef opcode_if
 
-void opcode::ifeq::exec(class bc const& bc __attribute__ ((unused))) const
-{
-	log_name("ifeq");
-
-	class vm &vm = manager::vms.top();
-	class stack_elem::int_const *a;
-
-	a = util::dn<class stack_elem::int_const*>(vm.stack.top()); vm.stack.pop();
-
-	if (a->value == 0)
-		vm.pc_goto(branch);
+#define opcode_if(name, op)								\
+void opcode::if##name::exec(class bc const& bc __attribute__ ((unused))) const		\
+{											\
+	log_name("if" #name);								\
+											\
+	class vm &vm = manager::vms.top();						\
+	class stack_elem::int_const *a;							\
+											\
+	a = util::dn<class stack_elem::int_const*>(vm.stack.top()); vm.stack.pop();	\
+											\
+	if (a->value op 0)								\
+		vm.pc_goto(branch);							\
 }
+opcode_if(eq, ==)
+opcode_if(ne, !=)
+opcode_if(lt, <)
+opcode_if(ge, >=)
+opcode_if(gt, >)
+opcode_if(le, <=)
+#undef opcode_if
 
 void opcode::op_return::exec(class bc const& bc __attribute__ ((unused))) const
 {
@@ -414,11 +484,26 @@ void opcode::iastore::exec(class bc const& bc __attribute__ ((unused))) const
 
 	class vm &vm = manager::get_vm();
 
-	class stack_elem::int_const *value = util::dn<stack_elem::int_const*>(vm.stack.top()); vm.stack.pop();
-	class stack_elem::int_const *index = util::dn<stack_elem::int_const*>(vm.stack.top()); vm.stack.pop();
-	class stack_elem::array_ref *array = util::dn<stack_elem::array_ref*>(vm.stack.top()); vm.stack.pop();
+	class stack_elem::int_const *value = util::dn<stack_elem::int_const*>(vm.stack.top());
+	vm.stack.pop();
+	class stack_elem::int_const *index = util::dn<stack_elem::int_const*>(vm.stack.top());
+	vm.stack.pop();
+	class stack_elem::array_ref *array = util::dn<stack_elem::array_ref*>(vm.stack.top());
+	vm.stack.pop();
 
-	array->vec.at(index->value) = value;
+	array->vec->at(index->value) = value;
+}
+
+void opcode::arraylength::exec(class bc const& bc __attribute__ ((unused))) const
+{
+	log_name("arraylength");
+
+	class vm &vm = manager::get_vm();
+
+	class stack_elem::array_ref *array = util::dn<stack_elem::array_ref*>(vm.stack.top());
+	vm.stack.pop();
+
+	vm.stack.push(new stack_elem::int_const(array->vec->size()));
 }
 
 void opcode::iaload::exec(class bc const& bc __attribute__ ((unused))) const
@@ -427,10 +512,12 @@ void opcode::iaload::exec(class bc const& bc __attribute__ ((unused))) const
 
 	class vm &vm = manager::get_vm();
 
-	class stack_elem::int_const *index = util::dn<stack_elem::int_const*>(vm.stack.top()); vm.stack.pop();
-	class stack_elem::array_ref *array = util::dn<stack_elem::array_ref*>(vm.stack.top()); vm.stack.pop();
+	class stack_elem::int_const *index = util::dn<stack_elem::int_const*>(vm.stack.top());
+	vm.stack.pop();
+	class stack_elem::array_ref *array = util::dn<stack_elem::array_ref*>(vm.stack.top());
+	vm.stack.pop();
 
-	class stack_elem::int_const *value = array->vec.at(index->value);
+	class stack_elem::int_const *value = array->vec->at(index->value);
 	vm.stack.push(value->copy());
 }
 

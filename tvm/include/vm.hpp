@@ -7,9 +7,11 @@
 #include <array>
 #include <vector>
 #include <map>
+#include <cassert>
 
 #include "clss.hpp"
 #include "opcode_h.hpp"
+#include "util.hpp"
 
 namespace stack_elem
 {
@@ -38,13 +40,18 @@ namespace stack_elem
 	{
 	public:
 		array_ref(uint32_t size) {
-			vec.resize(size);
+			vec = new std::vector<stack_elem::int_const*>();
+			vec->reserve(size);
+			for(; size > 0; size--)
+				vec->push_back(new stack_elem::int_const(0));
 		}
 
-		std::vector<stack_elem::int_const*> vec;
+		std::vector<stack_elem::int_const*> *vec;
 
 		stack_elem::base *copy() {
-			return new array_ref(vec.size());
+			class array_ref *a = new array_ref(vec->size());
+			a->vec = vec;
+			return a;
 		}
 	};
 

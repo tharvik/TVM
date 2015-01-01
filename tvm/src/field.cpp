@@ -3,6 +3,7 @@
 #include "file.hpp"
 #include "cp.hpp"
 #include "attribute.hpp"
+#include "methods.hpp"
 
 #include <iostream>
 
@@ -44,9 +45,10 @@ field_info *field::get_element(file& file, cp& cp)
 	descriptor = cp.get<CONSTANT_Utf8_info*>(file.read<uint16_t>())->value;
 
 	uint16_t attributes_count = file.read<uint16_t>();
-
 	for (; attributes_count > 0; attributes_count--)
 		attributes.push_back(attribute::parse(file, cp));
 
-	return new field_info(access_flags, name, descriptor, attributes);
+	class type *type = methods::descriptor_to_type(descriptor).at(0);
+
+	return new field_info(access_flags, name, type, attributes);
 }

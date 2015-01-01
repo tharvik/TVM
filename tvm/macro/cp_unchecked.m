@@ -1,6 +1,6 @@
 //cp_macro(CONSTANT_Utf8, 1)
 
-cp_macro(CONSTANT_Integer, 3, 5)
+//cp_macro(CONSTANT_Integer, 3, 5)
 cp_macro(CONSTANT_Float, 4, 5)
 cp_macro(CONSTANT_Long, 5, 9)
 cp_macro(CONSTANT_Double, 6, 9)
