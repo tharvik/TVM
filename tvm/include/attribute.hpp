@@ -48,6 +48,8 @@ public:
 		: max_stack(max_stack),
 		  max_locals(max_locals), code(code) {}
 
+	~Code_attribute();
+
 	uint16_t const max_stack;
 	uint16_t const max_locals;
 	std::vector<opcode::base*> code;

@@ -3,11 +3,24 @@
 #include "bc.hpp"
 #include "clss.hpp"
 
-std::map<std::string,class clss*> manager::classes;
-std::stack<class vm> manager::vms;
-std::string manager::class_name;
+manager manager::instance;
+class manager &manager::get_instance()
+{
+	return instance;
+};
 
-void manager::init(std::string name)
+manager::~manager()
+{
+	for (auto i : classes)
+		delete i.second;
+}
+
+class vm& manager::get_vm()
+{
+	return vms.top();
+};
+
+void manager::run(std::string name)
 {
 	class clss *cls = new clss(name);
 	classes.insert(std::make_pair(name, cls));
@@ -18,15 +31,7 @@ void manager::init(std::string name)
 	class_name = name;
 
 	vms.push(vm());
-}
 
-class vm& manager::get_vm()
-{
-	return vms.top();
-};
-
-void manager::run()
-{
 	std::vector<type*> types;
 
 	class type *str = type::get("Ljava/lang/String");

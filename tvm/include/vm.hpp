@@ -39,20 +39,11 @@ namespace stack_elem
 	class array_ref : public base
 	{
 	public:
-		array_ref(uint32_t size) {
-			vec = new std::vector<stack_elem::int_const*>();
-			vec->reserve(size);
-			for(; size > 0; size--)
-				vec->push_back(new stack_elem::int_const(0));
-		}
+		array_ref(uint32_t size);
 
 		std::vector<stack_elem::int_const*> *vec;
 
-		stack_elem::base *copy() {
-			class array_ref *a = new array_ref(vec->size());
-			a->vec = vec;
-			return a;
-		}
+		stack_elem::base *copy();
 	};
 
 	class class_ref : public base
@@ -76,24 +67,17 @@ class class_state
 {
 public:
 	class_state(std::string class_name);
-
-
-};
-
-class class_pool
-{
-public:
-	std::map<std::string, class_state*> map;
 };
 
 class vm
 {
 public:
+	~vm();
+
 	void exec(class bc const &bc, std::vector<opcode::base*> ops);
 
 	std::stack<class stack_elem::base*> stack;
 	std::vector<class stack_elem::base*> vars;
-	class class_pool class_pool;
 
 	void pc_goto(int32_t index);
 

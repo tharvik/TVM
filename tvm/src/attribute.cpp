@@ -72,13 +72,19 @@ attribute_info *attribute::get_element_LineNumberTable(class file& file __attrib
 	return new LineNumberTable_attribute();
 }
 
+Code_attribute::~Code_attribute()
+{
+	for (opcode::base * elem : code)
+		delete elem;
+}
+
 #define attribute_macro(name)						\
 	attribute_info *attribute::get_element_##name(			\
 			class file& file __attribute__((unused)),	\
-			class cp& cp __attribute__((unused)))	\
+			class cp& cp __attribute__((unused)))		\
 {									\
 	std::cerr << "Unchecked get_element_" #name << std::endl;	\
-	return nullptr;							\
+	throw "unchecked get_element_" #name;				\
 }
 #include "../macro/attribute_unchecked.m"
 #undef attribute_macro

@@ -20,6 +20,8 @@ namespace opcode
 	class base
 	{
 	public:
+		virtual ~base() {}
+
 		static base *parse(file& file);
 
 		short const size;

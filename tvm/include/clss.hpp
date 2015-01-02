@@ -15,6 +15,7 @@ class clss
 {
 public:
 	clss(std::string name);
+	virtual ~clss();
 
 	virtual void run_func(std::string class_name, std::string name, std::vector<type*> types);
 

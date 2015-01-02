@@ -1,20 +1,21 @@
 #include "type.hpp"
 
-std::map<enum type::elem, class type_elem*> type::elems;
-std::map<std::string, class type_class*> type::classes;
-std::map<class type*, class type_array*> type::arrays;
+std::map<enum type::elem, class type_elem> type::elems;
+std::map<std::string, class type_class> type::classes;
+std::map<class type*, class type_array> type::arrays;
 
 template<typename first, typename second>
-static second *get_singleton(std::map<first, second*> &map, first selector)
+static second *get_singleton(std::map<first, second> &map, first selector)
 {
 	auto i = map.find(selector);
 	if (i != map.end())
-		return i->second;
+		return &i->second;
 
-	second *ret = new second(selector);
+	second ret(selector);
 
-	map.insert(std::make_pair(selector, ret));
-	return ret;
+	map.insert(std::make_pair(selector, std::move(ret)));
+
+	return &map.find(selector)->second;
 }
 
 class type_elem *type::get(enum elem elm)

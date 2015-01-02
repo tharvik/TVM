@@ -4,7 +4,7 @@
 
 static void log_name(std::string name)
 {
-	std::cerr << manager::vms.size() << ":" << manager::vms.top().stack.size() << " ~ " << name << std::endl;
+	std::cerr << manager::get_instance().vms.size() << ":" << manager::get_instance().get_vm().stack.size() << " ~ " << name << std::endl;
 }
 
 opcode::base *opcode::base::parse(file& file)
@@ -28,7 +28,7 @@ void opcode::name::exec(class bc const &bc __attribute__ ((unused))) const	\
 {										\
 	log_name(#name);							\
 										\
-	class vm &vm = manager::vms.top();					\
+	class vm &vm = manager::get_instance().get_vm();					\
 										\
 	stack_elem::int_const* b = util::dn<stack_elem::int_const*>(vm.stack.top());\
 	vm.stack.pop();								\
@@ -36,6 +36,9 @@ void opcode::name::exec(class bc const &bc __attribute__ ((unused))) const	\
 	vm.stack.pop();								\
 										\
 	vm.stack.push(new stack_elem::int_const(a->value op b->value));		\
+										\
+	delete a;								\
+	delete b;								\
 }
 opcode_macro(iadd, +)
 opcode_macro(idiv, /)
@@ -47,16 +50,16 @@ void opcode::dup::exec(class bc const &bc __attribute__ ((unused))) const
 {
 	log_name("dup");
 
-	class vm &vm = manager::vms.top();
+	class vm &vm = manager::get_instance().get_vm();
 
-	vm.stack.push(vm.stack.top());
+	vm.stack.push(vm.stack.top()->copy());
 }
 
 void opcode::swap::exec(class bc const &bc __attribute__ ((unused))) const
 {
 	log_name("swap");
 
-	class vm &vm = manager::vms.top();
+	class vm &vm = manager::get_instance().get_vm();
 
 	stack_elem::base* a = vm.stack.top();
 	vm.stack.pop();
@@ -71,7 +74,7 @@ void opcode::ldc::exec(class bc const &bc) const
 {
 	log_name("ldc");
 
-	class vm &vm = manager::vms.top();
+	class vm &vm = manager::get_instance().get_vm();
 
 	class cp_info *info = bc.cp.get(index);
 	class stack_elem::base* elem = nullptr;
@@ -121,7 +124,7 @@ void opcode::name::exec(class bc const &bc __attribute__ ((unused))) const \
 {								\
 	log_name(#name);					\
 								\
-	manager::vms.top().stack.push(new stack_elem::int_const(byte));\
+	manager::get_instance().get_vm().stack.push(new stack_elem::int_const(byte));\
 }
 macro_push(bipush, uint8_t)
 macro_push(sipush, uint16_t)
@@ -131,51 +134,56 @@ void opcode::getstatic::exec(class bc const &bc __attribute__ ((unused))) const
 {
 	log_name("getstatic");
 
-	class vm &vm = manager::vms.top();
+	class vm &vm = manager::get_instance().get_vm();
 
 	vm.stack.push(new stack_elem::class_ref(new print_clss()));
 }
 
 void opcode::getfield::exec(class bc const &bc __attribute__ ((unused))) const
 {
-	class vm &vm = manager::vms.top();
+	class vm &vm = manager::get_instance().get_vm();
 	class ref_info *info = bc.cp.get<ref_info*>(index);
 
 	log_name("getfield\t\t" + info->name_and_type->name);
 
-	class clss *cls = util::dn<stack_elem::class_ref*>(vm.stack.top())->cls;
+	stack_elem::class_ref *ref = util::dn<stack_elem::class_ref*>(vm.stack.top());
 	vm.stack.pop();
 
-	vm.stack.push(cls->get_field(info->name_and_type->name)->copy());
+	vm.stack.push(ref->cls->get_field(info->name_and_type->name)->copy());
+
+	delete ref;
 }
 
 void opcode::putfield::exec(class bc const &bc __attribute__ ((unused))) const
 {
-	class vm &vm = manager::vms.top();
+	class vm &vm = manager::get_instance().get_vm();
 	class ref_info *info = bc.cp.get<ref_info*>(index);
 
 	log_name("putfield\t\t" + info->name_and_type->name);
 
 	class stack_elem::base *elem = vm.stack.top();
 	vm.stack.pop();
-	class clss *cls = util::dn<stack_elem::class_ref*>(vm.stack.top())->cls;
+	stack_elem::class_ref *ref = util::dn<stack_elem::class_ref*>(vm.stack.top());
 	vm.stack.pop();
 
-	cls->put_field(info->name_and_type->name, elem);
+	ref->cls->put_field(info->name_and_type->name, elem->copy());
+
+	delete ref;
+	delete elem;
 }
 
 void opcode::invokespecial::exec(class bc const &bc __attribute__ ((unused))) const
 {
 	log_name("invokespecial (nop, just remove obj)");
 
-	manager::vms.top().stack.pop();
+	manager::get_instance().get_vm().stack.pop();
 }
 
 void opcode::pop::exec(class bc const &bc __attribute__ ((unused))) const
 {
 	log_name("pop");
 
-	manager::vms.top().stack.pop();
+	manager::get_instance().get_vm().stack.pop();
 }
 
 void opcode::invokevirtual::exec(class bc const &bc) const
@@ -184,7 +192,7 @@ void opcode::invokevirtual::exec(class bc const &bc) const
 
 	log_name("invokevirtual\t\t" + meth->name_and_type->name);
 
-	std::stack<class stack_elem::base*> &old_stack = manager::vms.top().stack;
+	std::stack<class stack_elem::base*> &old_stack = manager::get_instance().get_vm().stack;
 
 	std::vector<class stack_elem::base*> args;
 	short total_args = meth->name_and_type->types.size() - 1;
@@ -200,8 +208,8 @@ void opcode::invokevirtual::exec(class bc const &bc) const
 	class clss *cls = util::dn<stack_elem::class_ref*>(args.at(0))->cls;
 	old_stack.pop();
 
-	manager::vms.push(vm());
-	class vm &vm = manager::vms.top();
+	manager::get_instance().vms.push(vm());
+	class vm &vm = manager::get_instance().get_vm();
 	vm.vars = args;
 
 	cls->run_func(meth->clss->name, meth->name_and_type->name, meth->name_and_type->types);
@@ -213,21 +221,21 @@ void opcode::op_new::exec(class bc const &bc) const
 
 	CONSTANT_Class_info *info = bc.cp.get<CONSTANT_Class_info*>(index);
 
-	class clss *cls = manager::get_class(info->name);
+	class clss *cls = manager::get_instance().get_class(info->name);
 
-	manager::vms.top().stack.push(new stack_elem::class_ref(cls));
+	manager::get_instance().get_vm().stack.push(new stack_elem::class_ref(cls));
 }
 
 void opcode::newarray::exec(class bc const &bc __attribute__ ((unused))) const
 {
 	log_name("newarray");
 
-	class vm &vm = manager::get_vm();
+	class vm &vm = manager::get_instance().get_vm();
 
 	stack_elem::int_const *count = util::dn<stack_elem::int_const*>(vm.stack.top());
 	vm.stack.pop();
 
-	manager::get_vm().stack.push(new stack_elem::array_ref(count->value));
+	manager::get_instance().get_vm().stack.push(new stack_elem::array_ref(count->value));
 }
 
 #define trivial_opcode(name)							\
@@ -284,8 +292,8 @@ trivial_opcode(swap)
 void opcode::type##load_##num::exec(class bc const &bc __attribute__ ((unused))) const	\
 {											\
 	log_name(#type "load_" #num);							\
-	class vm &vm = manager::vms.top();						\
-	vm.stack.push(vm.vars.at(num));							\
+	class vm &vm = manager::get_instance().get_vm();						\
+	vm.stack.push(vm.vars.at(num)->copy());							\
 }
 load_macro(a, 0)
 load_macro(a, 1)
@@ -302,8 +310,8 @@ load_macro(i, 3)
 void opcode::type##load::exec(class bc const &bc __attribute__ ((unused))) const	\
 {											\
 	log_name(#type "load");								\
-	class vm &vm = manager::vms.top();						\
-	vm.stack.push(vm.vars.at(index));							\
+	class vm &vm = manager::get_instance().get_vm();						\
+	vm.stack.push(vm.vars.at(index)->copy());							\
 }
 load_macro(a)
 load_macro(i)
@@ -313,7 +321,7 @@ load_macro(i)
 void opcode::iconst_##num::exec(class bc const &bc __attribute__ ((unused))) const	\
 {											\
 	log_name("iconst_" #num);							\
-	class vm &vm = manager::vms.top();						\
+	class vm &vm = manager::get_instance().get_vm();						\
 	vm.stack.push(new stack_elem::int_const(num));					\
 }
 iconst_macro(0)
@@ -328,7 +336,7 @@ iconst_macro(5)
 void opcode::type##store_##num::exec(class bc const &bc __attribute__ ((unused))) const	\
 {											\
 	log_name(#type "store_" #num);							\
-	class vm &vm = manager::vms.top();						\
+	class vm &vm = manager::get_instance().get_vm();						\
 											\
 	class stack_elem::base *val = vm.stack.top();					\
 	vm.vars.at(num) = val->copy();							\
@@ -349,7 +357,7 @@ store_macro(i, 3)
 void opcode::name##store::exec(class bc const &bc __attribute__ ((unused))) const	\
 {											\
 	log_name(#name "store");							\
-	class vm &vm = manager::vms.top();						\
+	class vm &vm = manager::get_instance().get_vm();						\
 											\
 	class stack_elem::base *val = vm.stack.top();					\
 	vm.vars.at(index) = val->copy();						\
@@ -364,11 +372,11 @@ void opcode::type##return::exec(class bc const &bc __attribute__ ((unused))) con
 {									\
 	log_name(#type "return");					\
 									\
-	class stack_elem::base *elem = manager::vms.top().stack.top();	\
+	class stack_elem::base *elem = manager::get_instance().get_vm().stack.top()->copy();	\
 									\
-	manager::vms.pop();						\
+	manager::get_instance().vms.pop();						\
 									\
-	manager::vms.top().stack.push(elem);				\
+	manager::get_instance().get_vm().stack.push(elem);				\
 }
 macro_return(a)
 macro_return(i)
@@ -377,7 +385,7 @@ macro_return(i)
 #define opcode_if(name)				\
 opcode::name *opcode::name::parse(file& file)	\
 {						\
-	int16_t branch;			\
+	int16_t branch;				\
 						\
 	branch = file.read<uint16_t>();		\
 						\
@@ -408,7 +416,7 @@ void opcode::if_acmp##name::exec(class bc const& bc __attribute__ ((unused))) co
 {								\
 	log_name("if_acmp" #name);				\
 								\
-	class vm &vm = manager::vms.top();			\
+	class vm &vm = manager::get_instance().get_vm();			\
 								\
 	bool comp = false;					\
 	if (dynamic_cast<class stack_elem::class_ref*>(vm.stack.top()) != nullptr) {\
@@ -417,12 +425,18 @@ void opcode::if_acmp##name::exec(class bc const& bc __attribute__ ((unused))) co
 		value1 = util::dn<class stack_elem::class_ref*>(vm.stack.top()); vm.stack.pop();\
 								\
 		comp = value1->cls op value2->cls;		\
+								\
+		delete value2;					\
+		delete value1;					\
 	} else if (dynamic_cast<class stack_elem::string_const*>(vm.stack.top()) != nullptr) {\
 		class stack_elem::string_const *value1, *value2;\
 		value2 = util::dn<class stack_elem::string_const*>(vm.stack.top()); vm.stack.pop();\
 		value1 = util::dn<class stack_elem::string_const*>(vm.stack.top()); vm.stack.pop();\
 								\
 		comp = &value1 op &value2;			\
+								\
+		delete value2;					\
+		delete value1;					\
 	} else							\
 		throw "Unknow value to cast";			\
 								\
@@ -438,7 +452,7 @@ void opcode::if_icmp##name::exec(class bc const& bc __attribute__ ((unused))) co
 {								\
 	log_name("if_icmp" #name);				\
 								\
-	class vm &vm = manager::vms.top();			\
+	class vm &vm = manager::get_instance().get_vm();			\
 	class stack_elem::int_const *value1, *value2;		\
 								\
 	value2 = util::dn<class stack_elem::int_const*>(vm.stack.top()); vm.stack.pop();\
@@ -446,6 +460,9 @@ void opcode::if_icmp##name::exec(class bc const& bc __attribute__ ((unused))) co
 								\
 	if (value1->value op value2->value)			\
 		vm.pc_goto(branch);				\
+								\
+	delete value2;						\
+	delete value1;						\
 }
 opcode_if(eq, ==)
 opcode_if(ne, !=)
@@ -460,12 +477,14 @@ void opcode::if##name::exec(class bc const& bc __attribute__ ((unused))) const		
 {											\
 	log_name("if" #name);								\
 											\
-	class vm &vm = manager::vms.top();						\
+	class vm &vm = manager::get_instance().get_vm();						\
 	class stack_elem::int_const *a;							\
 											\
 	a = util::dn<class stack_elem::int_const*>(vm.stack.top()); vm.stack.pop();	\
+	int val = a->value;								\
+	delete a;									\
 											\
-	if (a->value op 0)								\
+	if (val op 0)									\
 		vm.pc_goto(branch);							\
 }
 opcode_if(eq, ==)
@@ -480,57 +499,66 @@ void opcode::op_return::exec(class bc const& bc __attribute__ ((unused))) const
 {
 	log_name("op_return");
 
-	manager::vms.pop();
+	manager::get_instance().vms.pop();
 }
 
 void opcode::op_goto::exec(class bc const& bc __attribute__ ((unused))) const
 {
 	log_name("op_goto");
 
-	manager::vms.top().pc_goto(branch);
+	manager::get_instance().get_vm().pc_goto(branch);
 }
 
 void opcode::iastore::exec(class bc const& bc __attribute__ ((unused))) const
 {
 	log_name("iastore");
 
-	class vm &vm = manager::get_vm();
+	class vm &vm = manager::get_instance().get_vm();
 
-	class stack_elem::int_const *value = util::dn<stack_elem::int_const*>(vm.stack.top());
+	class stack_elem::int_const *value = util::dn<stack_elem::int_const*>(vm.stack.top()->copy());
 	vm.stack.pop();
-	class stack_elem::int_const *index = util::dn<stack_elem::int_const*>(vm.stack.top());
+	class stack_elem::int_const *index = util::dn<stack_elem::int_const*>(vm.stack.top()->copy());
 	vm.stack.pop();
-	class stack_elem::array_ref *array = util::dn<stack_elem::array_ref*>(vm.stack.top());
+	class stack_elem::array_ref *array = util::dn<stack_elem::array_ref*>(vm.stack.top()->copy());
 	vm.stack.pop();
 
-	array->vec->at(index->value) = value;
+	array->vec->at(index->value) = util::dn<stack_elem::int_const*>(value->copy());
+
+	delete value;
+	delete index;
+	delete array;
 }
 
 void opcode::arraylength::exec(class bc const& bc __attribute__ ((unused))) const
 {
 	log_name("arraylength");
 
-	class vm &vm = manager::get_vm();
+	class vm &vm = manager::get_instance().get_vm();
 
-	class stack_elem::array_ref *array = util::dn<stack_elem::array_ref*>(vm.stack.top());
+	class stack_elem::array_ref *array = util::dn<stack_elem::array_ref*>(vm.stack.top()->copy());
 	vm.stack.pop();
 
 	vm.stack.push(new stack_elem::int_const(array->vec->size()));
+
+	delete array;
 }
 
 void opcode::iaload::exec(class bc const& bc __attribute__ ((unused))) const
 {
 	log_name("iaload");
 
-	class vm &vm = manager::get_vm();
+	class vm &vm = manager::get_instance().get_vm();
 
-	class stack_elem::int_const *index = util::dn<stack_elem::int_const*>(vm.stack.top());
+	class stack_elem::int_const *index = util::dn<stack_elem::int_const*>(vm.stack.top()->copy());
 	vm.stack.pop();
-	class stack_elem::array_ref *array = util::dn<stack_elem::array_ref*>(vm.stack.top());
+	class stack_elem::array_ref *array = util::dn<stack_elem::array_ref*>(vm.stack.top()->copy());
 	vm.stack.pop();
 
 	class stack_elem::int_const *value = array->vec->at(index->value);
 	vm.stack.push(value->copy());
+
+	delete index;
+	delete array;
 }
 
 #define opcode_macro(name, id, length)					\

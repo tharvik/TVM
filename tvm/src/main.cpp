@@ -25,8 +25,8 @@ int main(int argc, char *const *const argv)
 	//class manager manager(argv[1]);
 	//manager.run();
 	file.resize(file.length() - 6);
-	manager::init(file);
-	manager::run();
+
+	manager::get_instance().run(file);
 //	delete cls;
 
 	return NO_ERROR;

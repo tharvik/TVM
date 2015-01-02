@@ -14,6 +14,7 @@ class methods
 {
 public:
 	static methods *parse(class file &file, class cp &cp);
+	~methods();
 
 	std::vector<class method_info*> const meths;
 
@@ -35,6 +36,8 @@ public:
 		: access_flags(access_flags), name(name),
 		  types(types), attributes(attributes)
 	{}
+
+	~method_info();
 
 	uint16_t const access_flags;
 	std::string const name;

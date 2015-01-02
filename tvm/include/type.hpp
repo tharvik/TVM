@@ -20,9 +20,9 @@ protected:
 	type() {}
 
 private:
-	static std::map<enum elem, class type_elem*> elems;
-	static std::map<std::string, class type_class*> classes;
-	static std::map<class type*, class type_array*> arrays;
+	static std::map<enum elem, class type_elem> elems;
+	static std::map<std::string, class type_class> classes;
+	static std::map<class type*, class type_array> arrays;
 
 public:
 	virtual ~type() {}

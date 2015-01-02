@@ -11,18 +11,24 @@
 class manager
 {
 public:
-	static void init(std::string name);
-	static void run();
+	static class manager &get_instance();
 
-	static class clss *get_class(std::string name);
+	void run(std::string name);
 
-	static class vm& get_vm();
+	class clss *get_class(std::string name);
 
-	static std::stack<class vm> vms;
+	class vm& get_vm();
+
+	std::stack<class vm> vms;
 
 private:
-	static std::map<std::string,class clss*> classes;
-	static std::string class_name;
+	manager() {}
+	~manager();
+
+	std::map<std::string, class clss*> classes;
+	std::string class_name;
+
+	static manager instance;
 };
 
 #endif // MANAGER_HPP

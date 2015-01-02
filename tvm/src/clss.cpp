@@ -56,9 +56,15 @@ clss::clss(std::string name)
 		parent = new clss(info->name);
 }
 
+clss::~clss()
+{
+	delete parent;
+	delete bc;
+}
+
 void clss::run_func(std::string class_name, std::string name, std::vector<type*> types)
 {
-	class vm &vm = manager::get_vm();
+	class vm &vm = manager::get_instance().get_vm();
 
 	auto i = meths.find(std::make_pair(name, types));
 
@@ -72,12 +78,12 @@ void clss::run_func(std::string class_name, std::string name, std::vector<type*>
 	}
 }
 
-void print_clss::run_func(std::string class_name, std::string name, std::vector<type*> types)
+void print_clss::run_func(std::string class_name __attribute__((unused)), std::string name, std::vector<type*> types)
 {
 	if(name != "println")
 		throw "Unimplemented printing func";
 
-	stack_elem::base *elem = manager::vms.top().vars.at(1);
+	stack_elem::base *elem = manager::get_instance().get_vm().vars.at(1);
 
 	class type_class *resolved_class;
 	if ((resolved_class = dynamic_cast<type_class*>(types.at(0))) != nullptr
@@ -101,7 +107,7 @@ void print_clss::run_func(std::string class_name, std::string name, std::vector<
 		}
 	}
 
-	manager::vms.pop();
+	manager::get_instance().vms.pop();
 }
 
 void clss::put_field(std::string name, class stack_elem::base *elem)
@@ -115,11 +121,11 @@ class stack_elem::base *clss::get_field(std::string name)
 	return fields.at(name);
 }
 
-void StringBuilder::run_func(std::string class_name, std::string name, std::vector<type*> types)
+void StringBuilder::run_func(std::string class_name __attribute__((unused)), std::string name, std::vector<type*> types __attribute__((unused)))
 {
 	stack_elem::base *elem = nullptr;
 	if (name == "append") {
-		elem = manager::vms.top().vars.at(1);
+		elem = manager::get_instance().get_vm().vars.at(1);
 #define macro_append(type)							\
 		if (stack_elem::type *val = dynamic_cast<stack_elem::type*>(elem))	\
 			elem = append(val);
@@ -135,8 +141,8 @@ void StringBuilder::run_func(std::string class_name, std::string name, std::vect
 	if (elem == nullptr)
 		throw "elem not set";
 
-	manager::vms.pop();
-	manager::vms.top().stack.push(elem);
+	manager::get_instance().vms.pop();
+	manager::get_instance().get_vm().stack.push(elem);
 }
 
 

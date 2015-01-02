@@ -19,6 +19,12 @@ methods *methods::parse(class file &file, class cp &cp)
 	return new methods(meths);
 }
 
+methods::~methods()
+{
+	for (auto m : meths)
+		delete m;
+}
+
 static class type* char_to_type(std::string::iterator &iter)
 {
 	class type *type = nullptr;
@@ -70,6 +76,12 @@ std::vector<class type*> methods::descriptor_to_type(std::string descriptor)
 	}
 
 	return types;
+}
+
+method_info::~method_info()
+{
+	for(auto a : attributes)
+		delete a;
 }
 
 method_info *methods::parse_meth(class file &file, class cp &cp)
