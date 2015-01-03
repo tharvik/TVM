@@ -6,7 +6,7 @@
 
 #include <iostream>
 
-methods *methods::parse(class file &file, class cp &cp)
+class methods *methods::parse(class file &file, class cp &cp)
 {
 	std::vector<class method_info*> meths;
 	uint16_t size;

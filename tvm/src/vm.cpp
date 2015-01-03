@@ -45,9 +45,8 @@ vm::~vm()
 		delete elem;
 }
 
-stack_elem::array_ref::array_ref(uint32_t size)
+stack_elem::array_ref::array_ref(uint32_t size) : vec(new std::vector<stack_elem::int_const*>())
 {
-	vec = new std::vector<stack_elem::int_const*>();
 	vec->reserve(size);
 	for(; size > 0; size--)
 		vec->push_back(new stack_elem::int_const(0));

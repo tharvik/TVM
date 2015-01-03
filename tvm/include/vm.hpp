@@ -8,6 +8,7 @@
 #include <vector>
 #include <map>
 #include <cassert>
+#include <memory>
 
 #include "clss.hpp"
 #include "opcode_h.hpp"
@@ -41,7 +42,7 @@ namespace stack_elem
 	public:
 		array_ref(uint32_t size);
 
-		std::vector<stack_elem::int_const*> *vec;
+		std::shared_ptr<std::vector<stack_elem::int_const*>> vec;
 
 		stack_elem::base *copy();
 	};
@@ -49,8 +50,8 @@ namespace stack_elem
 	class class_ref : public base
 	{
 	public:
-		class_ref(class clss *cls) : cls(cls) {}
-		class clss *cls;
+		class_ref(std::shared_ptr<class clss> cls) : cls(cls) {}
+		std::shared_ptr<class clss> cls;
 
 		stack_elem::base *copy() {return new class_ref(cls);}
 	};
@@ -58,7 +59,7 @@ namespace stack_elem
 	class print_class : public class_ref
 	{
 	public:
-		print_class() : class_ref(new print_clss()) {}
+		print_class() : class_ref(std::shared_ptr<class clss>(new print_clss())) {}
 	};
 
 }

@@ -30,7 +30,7 @@ public:
 	};
 
 private:
-	std::vector<cp_info*> elements;
+	std::vector<cp_info *> elements;
 	void add_element(file& file);
 };
 

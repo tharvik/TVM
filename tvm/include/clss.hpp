@@ -10,6 +10,7 @@
 #include <map>
 #include <vector>
 #include <list>
+#include <memory>
 
 class clss
 {
@@ -30,7 +31,7 @@ private:
 	std::map<std::string, class stack_elem::base*> fields;
 
 	class bc* bc;
-	class clss *parent;
+	std::shared_ptr<class clss> parent;
 
 	std::string name;
 };

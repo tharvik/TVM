@@ -30,22 +30,8 @@ clss::clss(std::string name)
 	}
 
 	for (class field_info *info : bc->field->fields) {
-
 		stack_elem::base *elem;
-
 		elem = nullptr;
-
-//		if(dynamic_cast<type_int*>(info->type) != nullptr)
-//			elem = new stack_elem::int_const(0);
-//		else if(dynamic_cast<type_array*>(info->type) != nullptr)
-//			elem = new stack_elem::array_ref(0);
-//		else if(dynamic_cast<type_class*>(info->type) != nullptr)
-//			elem = new stack_elem::array_ref(0);
-//		else {
-//			std::cerr << "field unknow type for return" << std::endl;
-//			throw "field unknow type";
-//		}
-
 		fields.insert(std::make_pair(info->name, elem));
 	}
 
@@ -53,13 +39,15 @@ clss::clss(std::string name)
 	if (info->name == "java/lang/Object")
 		parent = nullptr;
 	else
-		parent = new clss(info->name);
+		parent = std::shared_ptr<class clss>(new clss(info->name));
 }
 
 clss::~clss()
 {
-	delete parent;
 	delete bc;
+
+	for(auto i : fields)
+		delete i.second;
 }
 
 void clss::run_func(std::string class_name, std::string name, std::vector<type*> types)
@@ -112,7 +100,12 @@ void print_clss::run_func(std::string class_name __attribute__((unused)), std::s
 
 void clss::put_field(std::string name, class stack_elem::base *elem)
 {
-	fields.erase(name);
+	auto i = fields.find(name);
+	if (i != fields.end()) {
+		delete i->second;
+		fields.erase(i);
+	}
+
 	fields.insert(std::make_pair(name, elem));
 }
 
@@ -148,16 +141,18 @@ void StringBuilder::run_func(std::string class_name __attribute__((unused)), std
 
 class stack_elem::class_ref *StringBuilder::append(class stack_elem::int_const* elem)
 {
-	str += std::to_string(elem->value);
+	auto n = std::shared_ptr<class StringBuilder>(new StringBuilder());
+	n->str = str + std::to_string(elem->value);
 
-	return new stack_elem::class_ref(this);
+	return new stack_elem::class_ref(n);
 }
 
 class stack_elem::class_ref *StringBuilder::append(class stack_elem::string_const* elem)
 {
-	str += elem->value;
+	auto n = std::shared_ptr<class StringBuilder>(new StringBuilder());
+	n->str = str + elem->value;
 
-	return new stack_elem::class_ref(this);
+	return new stack_elem::class_ref(n);
 }
 
 class stack_elem::string_const *StringBuilder::toString()

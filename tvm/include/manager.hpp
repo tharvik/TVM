@@ -15,7 +15,7 @@ public:
 
 	void run(std::string name);
 
-	class clss *get_class(std::string name);
+	std::shared_ptr<class clss> get_class(std::string name);
 
 	class vm& get_vm();
 

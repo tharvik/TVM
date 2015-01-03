@@ -7,7 +7,7 @@
 
 #include <iostream>
 
-field *field::parse(file& file, cp &cp)
+class field *field::parse(file& file, cp &cp)
 {
 	uint16_t count = file.read<uint16_t>();
 

@@ -13,7 +13,7 @@
 class methods
 {
 public:
-	static methods *parse(class file &file, class cp &cp);
+	static class methods *parse(class file &file, class cp &cp);
 	~methods();
 
 	std::vector<class method_info*> const meths;

@@ -44,13 +44,13 @@ void manager::run(std::string name)
 	classes.at(class_name)->run_func(class_name, "main", types);
 }
 
-class clss *manager::get_class(std::string name)
+std::shared_ptr<class clss> manager::get_class(std::string name)
 {
-	class clss *cls;
+	std::shared_ptr<class clss> cls;
 	if (name == "java/lang/StringBuilder")
-		cls = new StringBuilder();
+		cls = std::shared_ptr<class clss>(new StringBuilder());
 	else
-		cls = new clss(name);
+		cls = std::shared_ptr<class clss>(new clss(name));
 
 	return cls;
 };
