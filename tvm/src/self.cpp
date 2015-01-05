@@ -4,6 +4,11 @@
 
 #include "file.hpp"
 
+self::self()
+{
+
+}
+
 self::self(file& file)
 {
 	access_flags = file.read<uint16_t>();

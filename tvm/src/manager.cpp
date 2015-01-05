@@ -32,7 +32,7 @@ void manager::run(std::string name)
 
 	vms.push(vm());
 
-	std::vector<type*> types;
+	std::vector<class type*> types;
 
 	class type *str = type::get("Ljava/lang/String");
 	class type *arr = type::get(str);

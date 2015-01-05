@@ -13,7 +13,7 @@
 
 clss::clss()
 {
-	// empty
+
 }
 
 clss::clss(std::string name)
@@ -23,19 +23,19 @@ clss::clss(std::string name)
 
 	std::cerr << "--> load new class: " << name << std::endl;
 
-	for (class method_info *info : bc->methods->meths) {
+	for (class method_info *info : bc.methods->meths) {
 		Code_attribute *code = util::dn<Code_attribute*>(info->attributes.at(0));
 
 		meths.insert(std::make_pair(std::make_pair(info->name, info->types), code));
 	}
 
-	for (class field_info *info : bc->field->fields) {
+	for (class field_info const &info : bc.field->fields) {
 		stack_elem::base *elem;
 		elem = nullptr;
-		fields.insert(std::make_pair(info->name, elem));
+		fields.insert(std::make_pair(info.name, elem));
 	}
 
-	class CONSTANT_Class_info *info = bc->cp.get<class CONSTANT_Class_info*>(bc->self.super_class);
+	class CONSTANT_Class_info *info = bc.cp.get<class CONSTANT_Class_info*>(bc.self.super_class);
 	if (info->name == "java/lang/Object")
 		parent = nullptr;
 	else
@@ -44,13 +44,11 @@ clss::clss(std::string name)
 
 clss::~clss()
 {
-	delete bc;
-
 	for(auto i : fields)
 		delete i.second;
 }
 
-void clss::run_func(std::string class_name, std::string name, std::vector<type*> types)
+void clss::run_func(std::string const class_name, std::string const name, std::vector<class type*> const &types)
 {
 	class vm &vm = manager::get_instance().get_vm();
 
@@ -62,11 +60,11 @@ void clss::run_func(std::string class_name, std::string name, std::vector<type*>
 		class Code_attribute *attr = i->second;
 		vm.vars.resize(attr->max_locals);
 
-		vm.exec(*bc, attr->code);
+		vm.exec(bc, attr->code);
 	}
 }
 
-void print_clss::run_func(std::string class_name __attribute__((unused)), std::string name, std::vector<type*> types)
+void print_clss::run_func(std::string const class_name, std::string const name, std::vector<class type*> const &types)
 {
 	if(name != "println")
 		throw "Unimplemented printing func";
@@ -114,7 +112,7 @@ class stack_elem::base *clss::get_field(std::string name)
 	return fields.at(name);
 }
 
-void StringBuilder::run_func(std::string class_name __attribute__((unused)), std::string name, std::vector<type*> types __attribute__((unused)))
+void StringBuilder::run_func(std::string const class_name, std::string const name, std::vector<class type*> const &types)
 {
 	stack_elem::base *elem = nullptr;
 	if (name == "append") {

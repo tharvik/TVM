@@ -8,6 +8,7 @@
 class self
 {
 public:
+	self();
 	self(class file &file);
 
 	uint16_t access_flags;

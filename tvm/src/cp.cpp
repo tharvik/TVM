@@ -5,12 +5,22 @@
 
 #include <iostream>
 
+cp::cp()
+{
+
+}
+
 cp::cp(class file& file)
 {
 	uint16_t count = file.read<uint16_t>();
 
 	for (uint16_t i = count - 1; i > 0; i--)
 		add_element(file);
+}
+
+cp::cp(class cp& other)
+{
+	elements = other.elements;
 }
 
 cp::cp(class cp&& other)
@@ -94,7 +104,7 @@ class CONSTANT_NameAndType_info *CONSTANT_NameAndType_info::parse(class file& fi
 	std::string name = cp.get<CONSTANT_Utf8_info*>(name_index)->value;
 	std::string descriptor = cp.get<CONSTANT_Utf8_info*>(desciptor_index)->value;
 
-	std::vector<type*> types = methods::descriptor_to_type(descriptor);
+	std::vector<class type*> types = methods::descriptor_to_type(descriptor);
 
 	return new CONSTANT_NameAndType_info(name, types);
 };

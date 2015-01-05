@@ -12,7 +12,9 @@ class cp_info;
 class cp
 {
 public:
+	cp();
 	cp(class file& file);
+	cp(class cp& other);
 	cp(class cp&& other);
 	~cp();
 
@@ -30,7 +32,7 @@ public:
 	};
 
 private:
-	std::vector<cp_info *> elements;
+	std::vector<class cp_info *> elements;
 	void add_element(file& file);
 };
 
@@ -88,10 +90,10 @@ public:
 
 	static class CONSTANT_NameAndType_info * parse(class file &file, class cp const &cp);
 	std::string const name;
-	std::vector<type*> const types;
+	std::vector<class type*> const types;
 
 private:
-	CONSTANT_NameAndType_info(std::string name, std::vector<type*> types)
+	CONSTANT_NameAndType_info(std::string name, std::vector<class type*> types)
 		: name(name), types(types) {};
 };
 

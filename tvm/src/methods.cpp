@@ -25,7 +25,7 @@ methods::~methods()
 		delete m;
 }
 
-static class type* char_to_type(std::string::iterator &iter)
+static class type *char_to_type(std::string::iterator &iter)
 {
 	class type *type = nullptr;
 
@@ -66,12 +66,11 @@ static class type* char_to_type(std::string::iterator &iter)
 
 std::vector<class type*> methods::descriptor_to_type(std::string descriptor)
 {
-	std::vector<type*> types;
+	std::vector<class type*> types;
 
 	for (auto i = descriptor.begin(); i != descriptor.end(); i++) {
-		class type* tpe = char_to_type(i);
-		if(tpe == nullptr) continue;
-
+		class type *tpe = char_to_type(i);
+		if (tpe == nullptr) continue;
 		types.push_back(tpe);
 	}
 
@@ -101,7 +100,7 @@ method_info *methods::parse_meth(class file &file, class cp &cp)
 	for (; attributes_count > 0; attributes_count--)
 		attributes.push_back(attribute::parse(file, cp));
 
-	std::vector<class type*> types = descriptor_to_type(descriptor);
+	std::vector<class type*> const &types = descriptor_to_type(descriptor);
 
 	return new method_info(access_flags, name, types, attributes);
 }

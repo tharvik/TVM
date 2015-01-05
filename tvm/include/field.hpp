@@ -3,6 +3,7 @@
 
 #include "file_h.hpp"
 #include "attribute_h.hpp"
+#include "type.hpp"
 #include "cp_h.hpp"
 
 #include <cstdint>
@@ -16,21 +17,19 @@ class field
 public:
 	static class field *parse(class file& file, class cp &cp);
 
-	~field();
-
-	std::vector<class field_info*> const fields;
+	std::vector<class field_info> const fields;
 
 private:
-	static field_info *get_element(class file& file, class cp &cp);
+	static field_info const get_element(class file& file, class cp &cp);
 
-	field(std::vector<class field_info*> fields) : fields(fields) {}
+	field(std::vector<class field_info> &&fields) : fields(std::move(fields)) {}
 };
 
 class field_info
 {
 public:
 	field_info(uint16_t access_flags, std::string name,
-		   class type * const type,
+		   class type *type,
 		   std::vector<attribute_info*> attributes)
 		: access_flags(access_flags), name(name),
 		  type(type), attributes(attributes) {}
@@ -38,7 +37,7 @@ public:
 
 	uint16_t const access_flags;
 	std::string const name;
-	class type * const type;
+	class type *type;
 	std::vector<attribute_info*> const attributes;
 };
 

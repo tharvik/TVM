@@ -16,7 +16,10 @@
 class bc
 {
 public:
-	static bc *parse(std::string path);
+	static bc parse(std::string const &path);
+
+	bc();
+	bc(class bc const &other);
 	~bc();
 
 	std::vector<opcode::base*> get_main() const;
@@ -33,7 +36,7 @@ public:
 
 private:
 	bc(uint32_t magic, uint16_t minor_version, uint16_t major_version,
-	   class cp &cp, class self self, class interface interface,
+	   class cp &&cp, class self self, class interface interface,
 	   class field const * const field, class methods const * const methods)
 		: magic(magic), minor_version(minor_version),
 		  major_version(major_version), cp(std::move(cp)), self(self),

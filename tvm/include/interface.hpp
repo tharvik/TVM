@@ -6,6 +6,7 @@
 class interface
 {
 public:
+	interface();
 	interface(class file& file);
 };
 
