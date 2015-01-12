@@ -20,25 +20,19 @@ class field *field::parse(file& file, cp &cp)
 	return new field(std::move(fields));
 }
 
-field_info::~field_info()
-{
-	for (class attribute_info* attr : attributes)
-		delete attr;
-}
-
 field_info const field::get_element(file& file, cp& cp)
 {
 	uint16_t const access_flags = file.read<uint16_t>();
-	std::string const name = cp.get<CONSTANT_Utf8_info*>(file.read<uint16_t>())->value;
-	std::string const descriptor = cp.get<CONSTANT_Utf8_info*>(file.read<uint16_t>())->value;
+	std::string const name = cp.get<CONSTANT_Utf8_info>(file.read<uint16_t>())->value;
+	std::string const descriptor = cp.get<CONSTANT_Utf8_info>(file.read<uint16_t>())->value;
 
-	std::vector<attribute_info*> attributes;
+	std::vector<std::shared_ptr<attribute_info>> attributes;
 	uint16_t attributes_count = file.read<uint16_t>();
 	attributes.reserve(attributes_count);
 	for (; attributes_count > 0; attributes_count--)
 		attributes.push_back(attribute::parse(file, cp));
 
-	class type *type = methods::descriptor_to_type(descriptor).at(0);
+	std::shared_ptr<class type> type = methods::descriptor_to_type(descriptor).at(0);
 
 	return field_info(access_flags, name, std::move(type), attributes);
 }

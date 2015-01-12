@@ -29,16 +29,15 @@ class field_info
 {
 public:
 	field_info(uint16_t access_flags, std::string name,
-		   class type *type,
-		   std::vector<attribute_info*> attributes)
+		   std::shared_ptr<class type> type,
+		   std::vector<std::shared_ptr<attribute_info>> attributes)
 		: access_flags(access_flags), name(name),
 		  type(type), attributes(attributes) {}
-	~field_info();
 
 	uint16_t const access_flags;
 	std::string const name;
-	class type *type;
-	std::vector<attribute_info*> const attributes;
+	std::shared_ptr<class type> type;
+	std::vector<std::shared_ptr<attribute_info>> const attributes;
 };
 
 #endif

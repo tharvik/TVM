@@ -23,24 +23,24 @@ clss::clss(std::string name)
 
 	std::cerr << "--> load new class: " << name << std::endl;
 
-	for (class method_info *info : bc.methods->meths) {
-		Code_attribute *code = util::dn<Code_attribute*>(info->attributes.at(0));
+	for (auto info : bc->methods.meths) {
+		auto code = util::dpc<Code_attribute>(info->attributes.at(0));
 
 		meths.insert(std::make_pair(std::make_pair(info->name, info->types), code));
 	}
 
-	for (class field_info const &info : bc.field->fields) {
+	for (class field_info const &info : bc->field->fields) {
 		fields.insert(std::make_pair(info.name, nullptr));
 	}
 
-	class CONSTANT_Class_info *info = bc.cp.get<class CONSTANT_Class_info*>(bc.self.super_class);
+	auto info = bc->cp.get<class CONSTANT_Class_info>(bc->self.super_class);
 	if (info->name == "java/lang/Object")
 		parent = nullptr;
 	else
-		parent = std::shared_ptr<class clss>(new clss(info->name));
+		parent = std::make_shared<class clss>(info->name);
 }
 
-void clss::run_func(std::string const class_name, std::string const name, std::vector<class type*> const &types)
+void clss::run_func(std::string const class_name, std::string const name, std::vector<std::shared_ptr<class type>> const &types)
 {
 	class vm &vm = manager::get_instance().get_vm();
 
@@ -49,33 +49,33 @@ void clss::run_func(std::string const class_name, std::string const name, std::v
 	if (i == meths.end()) {
 		parent->run_func(class_name, name, types);
 	} else {
-		class Code_attribute *attr = i->second;
+		auto attr = i->second;
 		vm.vars.resize(attr->max_locals);
 
-		vm.exec(bc, attr->code);
+		vm.exec(*bc, attr->code);
 	}
 }
 
-void print_clss::run_func(std::string const class_name, std::string const name, std::vector<class type*> const &types)
+void print_clss::run_func(std::string const class_name, std::string const name __attribute__ ((unused)), std::vector<std::shared_ptr<class type>> const &types)
 {
 	if(name != "println")
 		throw "Unimplemented printing func";
 
 	auto elem = manager::get_instance().get_vm().vars.at(1);
 
-	class type_class *resolved_class;
-	if ((resolved_class = dynamic_cast<type_class*>(types.at(0))) != nullptr
+	std::shared_ptr<class type_class> resolved_class;
+	if ((resolved_class = std::dynamic_pointer_cast<type_class>(types.at(0))) != nullptr
 	    && resolved_class->name == "Ljava/lang/String") {
 		auto val = util::dpc<stack_elem::string_const>(elem);
 		std::cout << val->value << std::endl;
 	} else {
 		auto val = util::dpc<stack_elem::int_const>(elem);
-		class type_elem *resolved_type;
-		if ((resolved_type = dynamic_cast<type_elem*>(types.at(0))) != nullptr
+		std::shared_ptr<class type_elem> resolved_type;
+		if ((resolved_type = std::dynamic_pointer_cast<type_elem>(types.at(0))) != nullptr
 		    && resolved_type->elm == type::INT)
 			std::cout << val->value << std::endl;
 
-		else if ((resolved_type = dynamic_cast<type_elem*>(types.at(0))) != nullptr
+		else if ((resolved_type = std::dynamic_pointer_cast<type_elem>(types.at(0))) != nullptr
 			 && resolved_type->elm == type::BOOL) {
 			if(val->value) {
 				std::cout << "true" << std::endl;
@@ -102,7 +102,8 @@ std::shared_ptr<class stack_elem::base> clss::get_field(std::string name)
 	return fields.at(name);
 }
 
-void StringBuilder::run_func(std::string const class_name, std::string const name, std::vector<class type*> const &types)
+void StringBuilder::run_func(std::string const class_name __attribute__ ((unused)), std::string const name,
+			std::vector<std::shared_ptr<class type>> const &types __attribute__ ((unused)))
 {
 	std::shared_ptr<stack_elem::base> elem;
 	if (name == "append") {

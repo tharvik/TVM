@@ -16,33 +16,32 @@ class vm& manager::get_vm()
 
 void manager::run(std::string name)
 {
-	class clss *cls = new clss(name);
-	classes.insert(std::make_pair(name, cls));
-
-	cls = new print_clss();
-	classes.insert(std::make_pair("java/io/PrintStream", cls));
+	auto cls = clss(name);
 
 	class_name = name;
 
 	vms.push(vm());
 
-	std::vector<class type*> types;
+	std::vector<std::shared_ptr<class type>> types;
 
-	class type *str = type::get("Ljava/lang/String");
-	class type *arr = type::get(str);
+	auto str = type::get("Ljava/lang/String");
+	auto arr = type::get(str);
 	types.push_back(arr);
 
-	class type *vod = type::get(type::VOID);
+	auto vod = type::get(type::VOID);
 	types.push_back(vod);
 
-	classes.at(class_name)->run_func(class_name, "main", types);
+	cls.run_func(class_name, "main", types);
 }
 
 std::shared_ptr<class clss> manager::get_class(std::string name)
 {
 	std::shared_ptr<class clss> cls;
-	if (name == "java/lang/StringBuilder")
-		cls = std::shared_ptr<class clss>(new StringBuilder());
+
+	if (name == "java/io/PrintStream")
+		cls = std::make_shared<class print_clss>();
+	else if (name == "java/lang/StringBuilder")
+		cls = std::make_shared<class StringBuilder>();
 	else
 		cls = std::shared_ptr<class clss>(new clss(name));
 

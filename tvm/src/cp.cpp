@@ -27,22 +27,14 @@ cp::cp(class cp&& other)
 {
 	elements = other.elements;
 
-	other.elements = std::vector<cp_info*>();
-}
-
-cp::~cp()
-{
-	for (cp_info *info : elements) {
-		if (info == nullptr) continue;
-		delete info;
-	}
+	other.elements = std::vector<std::shared_ptr<cp_info>>();
 }
 
 void cp::add_element(file& file)
 {
 	uint8_t tag = file.read<uint8_t>();
 
-	cp_info *info;
+	std::shared_ptr<cp_info> info;
 	switch(tag) {
 	case cp::tag::CONSTANT_Fieldref:
 	case cp::tag::CONSTANT_Methodref:
@@ -66,65 +58,64 @@ void cp::add_element(file& file)
 
 #include "type.hpp"
 
-class CONSTANT_Utf8_info *CONSTANT_Utf8_info::parse(class file &file, class cp const &cp __attribute__ ((unused)))
+std::shared_ptr<class CONSTANT_Utf8_info> CONSTANT_Utf8_info::parse(class file &file, class cp const &cp __attribute__ ((unused)))
 {
 	uint16_t length = file.read<uint16_t>();
 
 	std::vector<uint8_t> bytes = file.read(length);
 	std::string str(bytes.begin(), bytes.end());
 
-	return new CONSTANT_Utf8_info(str);
+	return std::make_shared<CONSTANT_Utf8_info>(str);
 };
 
-class CONSTANT_Class_info *CONSTANT_Class_info::parse(class file &file, class cp const &cp)
+std::shared_ptr<class CONSTANT_Class_info> CONSTANT_Class_info::parse(class file &file, class cp const &cp)
 {
 	uint16_t index = file.read<uint16_t>();
-	CONSTANT_Utf8_info *utf8
-		= util::dn<CONSTANT_Utf8_info*>(cp.get(index));
+	auto utf8 = cp.get<CONSTANT_Utf8_info>(index);
 
-	return new CONSTANT_Class_info(utf8->value);
+	return std::shared_ptr<CONSTANT_Class_info>(new CONSTANT_Class_info(utf8->value));
 };
 
-class ref_info *ref_info::parse(class file &file, class cp const &cp)
+std::shared_ptr<class ref_info> ref_info::parse(class file &file, class cp const &cp)
 {
 	uint16_t class_index = file.read<uint16_t>();
 	uint16_t name_and_type_index = file.read<uint16_t>();
 
-	CONSTANT_Class_info *clss = cp.get<CONSTANT_Class_info*>(class_index);
-	CONSTANT_NameAndType_info *name_and_type = cp.get<CONSTANT_NameAndType_info*>(name_and_type_index);
+	auto clss = cp.get<CONSTANT_Class_info>(class_index);
+	auto name_and_type = cp.get<CONSTANT_NameAndType_info>(name_and_type_index);
 
-	return new ref_info(clss, name_and_type);
+	return std::shared_ptr<ref_info>(new ref_info(clss, name_and_type));
 };
 
-class CONSTANT_NameAndType_info *CONSTANT_NameAndType_info::parse(class file& file, class cp const& cp)
+std::shared_ptr<class CONSTANT_NameAndType_info> CONSTANT_NameAndType_info::parse(class file& file, class cp const& cp)
 {
 	uint16_t name_index = file.read<uint16_t>();
 	uint16_t desciptor_index = file.read<uint16_t>();
 
-	std::string name = cp.get<CONSTANT_Utf8_info*>(name_index)->value;
-	std::string descriptor = cp.get<CONSTANT_Utf8_info*>(desciptor_index)->value;
+	std::string name = cp.get<CONSTANT_Utf8_info>(name_index)->value;
+	std::string descriptor = cp.get<CONSTANT_Utf8_info>(desciptor_index)->value;
 
-	std::vector<class type*> types = methods::descriptor_to_type(descriptor);
+	std::vector<std::shared_ptr<class type>> types = methods::descriptor_to_type(descriptor);
 
-	return new CONSTANT_NameAndType_info(name, types);
+	return std::shared_ptr<CONSTANT_NameAndType_info>(new CONSTANT_NameAndType_info(name, types));
 };
 
-class CONSTANT_String_info *CONSTANT_String_info::parse(class file& file, class cp const& cp)
+std::shared_ptr<class CONSTANT_String_info> CONSTANT_String_info::parse(class file& file, class cp const& cp)
 {
 	uint16_t index = file.read<uint16_t>();
 
-	CONSTANT_Utf8_info *utf8 = cp.get<CONSTANT_Utf8_info*>(index);
+	auto utf8 = cp.get<CONSTANT_Utf8_info>(index);
 
-	return new CONSTANT_String_info(utf8->value);
+	return std::shared_ptr<CONSTANT_String_info>(new CONSTANT_String_info(utf8->value));
 };
 
-class CONSTANT_Integer_info *CONSTANT_Integer_info::parse(class file& file, class cp const& cp __attribute__ ((unused)))
+std::shared_ptr<class CONSTANT_Integer_info> CONSTANT_Integer_info::parse(class file& file, class cp const& cp __attribute__ ((unused)))
 {
 	uint32_t value;
 
 	value = file.read<uint32_t>();
 
-	return new CONSTANT_Integer_info(value);
+	return std::shared_ptr<CONSTANT_Integer_info>(new CONSTANT_Integer_info(value));
 };
 
 

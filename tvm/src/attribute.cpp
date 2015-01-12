@@ -6,10 +6,10 @@
 
 #include <iostream>
 
-attribute_info *attribute::parse(class file& file, class cp& cp)
+std::shared_ptr<class attribute_info> attribute::parse(class file& file, class cp& cp)
 {
 	uint16_t index = file.read<uint16_t>();
-	std::string name = cp.get<CONSTANT_Utf8_info*>(index)->value;
+	std::string name = cp.get<class CONSTANT_Utf8_info>(index)->value;
 
 	file.read<uint32_t>();
 
@@ -17,7 +17,7 @@ attribute_info *attribute::parse(class file& file, class cp& cp)
 }
 
 template<>
-Code_attribute *attribute::get_element<Code_attribute>(class file& file, class cp& cp)
+std::shared_ptr<Code_attribute> attribute::get_element<Code_attribute>(class file& file, class cp& cp)
 {
 	uint16_t max_stack;
 	uint16_t max_locals;
@@ -44,29 +44,30 @@ Code_attribute *attribute::get_element<Code_attribute>(class file& file, class c
 	// drop it
 	uint16_t attributes_count = file.read<uint16_t>();
 	for (; attributes_count > 0; attributes_count--)
-		delete attribute::parse(file, cp);
+		attribute::parse(file, cp);
 
-	return new Code_attribute(max_stack, max_locals, code);
+	return std::shared_ptr<Code_attribute>(new Code_attribute(max_stack, max_locals, code));
 }
 
 template<>
-LineNumberTable_attribute *attribute::get_element<LineNumberTable_attribute>(class file& file, class cp& cp __attribute__ ((unused)))
+std::shared_ptr<LineNumberTable_attribute> attribute::get_element<LineNumberTable_attribute>(class file& file, class cp& cp __attribute__ ((unused)))
 {
 	// drop it
 	uint16_t size = file.read<uint16_t>();
 	for (; size > 0; size--)
 		file.read(4);
 
-	return new LineNumberTable_attribute();
+	return std::shared_ptr<LineNumberTable_attribute>(new LineNumberTable_attribute());
 }
 
-attribute_info *attribute::get_element(class file& file, class cp& cp,
+std::shared_ptr<attribute_info> attribute::get_element(class file& file, class cp& cp,
 				       std::string name)
 {
-	if (name == "Code")
-		return get_element<Code_attribute>(file, cp);
-	if (name == "LineNumberTable")
-		return get_element<LineNumberTable_attribute>(file, cp);
+#define attribute_macro(type)	\
+	if (name == #type)	\
+		return get_element<type##_attribute>(file, cp);
+#include "../macro/attribute.m"
+#undef attribute_macro
 
 	std::cerr << "Unknow attribute: " << name << std::endl;
 	throw "Unknow attribute: ";

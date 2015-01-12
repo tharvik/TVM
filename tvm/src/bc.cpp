@@ -4,8 +4,14 @@
 #include "methods.hpp"
 #include "attribute.hpp"
 
-bc bc::parse(std::string const &path)
+std::map<std::string, std::shared_ptr<class bc>> bc::bcs;
+
+std::shared_ptr<class bc> bc::parse(std::string const &path)
 {
+	auto i = bcs.find(path);
+	if(i != bcs.end())
+		return i->second;
+
 	class file file(path);
 
 	uint32_t const magic = file.read<uint32_t>();
@@ -19,13 +25,17 @@ bc bc::parse(std::string const &path)
 	class self self(file);
 	class interface interface(file);
 	class field *field = field::parse(file, cp);
-	class methods *methods = methods::parse(file, cp);
+	class methods methods(methods::parse(file, cp));
 
-	return bc(magic, minor_version, major_version, std::move(cp),
-		      self, interface, field, methods);
+	auto inst = std::shared_ptr<class bc>(new bc(magic, minor_version, major_version, std::move(cp),
+		      self, interface, field, methods));
+
+	bcs.insert(std::make_pair(path, inst));
+
+	return bcs.find(path)->second;
 }
 
-bc::bc() : magic(0), minor_version(0), major_version(0), field(nullptr), methods(nullptr)
+bc::bc() : magic(0), minor_version(0), major_version(0), field(nullptr)
 {
 
 }
@@ -39,19 +49,18 @@ field(other.field), methods(other.methods)
 bc::~bc()
 {
 	delete field;
-	delete methods;
 }
 
 std::vector<opcode::base*> bc::get_main() const
 {
-	std::vector<class attribute_info*> attributes;
-	for (method_info const * const m : methods->meths)
+	std::vector<std::shared_ptr<class attribute_info>> attributes;
+	for (auto m : methods.meths)
 		if (m->name == "main") {
 			attributes = m->attributes;
 			break;
 		}
 
- 	class Code_attribute * code = util::dn<class Code_attribute* >(attributes.at(0));
+ 	std::shared_ptr<class Code_attribute> code = util::dpc<class Code_attribute>(attributes.at(0));
 
 	return code->code;
 }

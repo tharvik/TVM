@@ -3,6 +3,7 @@
 
 #include <string>
 #include <map>
+#include <memory>
 
 class type {
 public:
@@ -12,9 +13,9 @@ public:
 		VOID
 	};
 
-	static class type_elem *get(enum elem elm);
-	static class type_class *get(std::string class_name);
-	static class type_array *get(class type *tpe);
+	static std::shared_ptr<class type_elem> get(enum elem elm);
+	static std::shared_ptr<class type_class> get(std::string class_name);
+	static std::shared_ptr<class type_array> get(std::shared_ptr<class type> tpe);
 
 	virtual bool operator <(class type const &other) const;
 
@@ -22,9 +23,9 @@ protected:
 	type() {}
 
 private:
-	static std::map<enum elem, class type_elem> elems;
-	static std::map<std::string, class type_class> classes;
-	static std::map<class type *, class type_array> arrays;
+	static std::map<enum elem, std::shared_ptr<class type_elem>> elems;
+	static std::map<std::string, std::shared_ptr<class type_class>> classes;
+	static std::map<std::shared_ptr<class type>, std::shared_ptr<class type_array>> arrays;
 
 public:
 	virtual ~type() {}
@@ -52,9 +53,9 @@ public:
 class type_array : public type
 {
 public:
-	class type const *contained;
+	std::shared_ptr<class type> contained;
 
-	type_array(class type *contained) : contained(contained) {}
+	type_array(std::shared_ptr<class type> contained) : contained(contained) {}
 
 	bool operator <(class type_array const &other) const;
 };

@@ -8,18 +8,19 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <memory>
 
 class attribute_info;
 class attribute
 {
 public:
-	static attribute_info *parse(class file& file, class cp& cp);
+	static std::shared_ptr<class attribute_info> parse(class file& file, class cp& cp);
 private:
-	static attribute_info *get_element(class file& file, class cp& cp,
+	static std::shared_ptr<class attribute_info> get_element(class file& file, class cp& cp,
 					   std::string name);
 
 	template <typename type>
-	static type *get_element(class file& file, class cp& cp);
+	static std::shared_ptr<type> get_element(class file& file, class cp& cp);
 };
 
 class attribute_info

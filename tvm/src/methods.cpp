@@ -6,9 +6,9 @@
 
 #include <iostream>
 
-class methods *methods::parse(class file &file, class cp &cp)
+class methods methods::parse(class file &file, class cp &cp)
 {
-	std::vector<class method_info*> meths;
+	std::vector<std::shared_ptr<class method_info>> meths;
 	uint16_t size;
 
 	size = file.read<uint16_t>();
@@ -16,18 +16,12 @@ class methods *methods::parse(class file &file, class cp &cp)
 	for (; size > 0; size--)
 		meths.push_back(parse_meth(file, cp));
 
-	return new methods(meths);
+	return methods(meths);
 }
 
-methods::~methods()
+static std::shared_ptr<class type> char_to_type(std::string::iterator &iter)
 {
-	for (auto m : meths)
-		delete m;
-}
-
-static class type *char_to_type(std::string::iterator &iter)
-{
-	class type *type = nullptr;
+	std::shared_ptr<class type> type;
 
 	switch(*iter) {
 	case 'L': {
@@ -64,12 +58,12 @@ static class type *char_to_type(std::string::iterator &iter)
 	return type;
 }
 
-std::vector<class type*> methods::descriptor_to_type(std::string descriptor)
+std::vector<std::shared_ptr<class type>> methods::descriptor_to_type(std::string descriptor)
 {
-	std::vector<class type*> types;
+	std::vector<std::shared_ptr<class type>> types;
 
 	for (auto i = descriptor.begin(); i != descriptor.end(); i++) {
-		class type *tpe = char_to_type(i);
+		auto tpe = char_to_type(i);
 		if (tpe == nullptr) continue;
 		types.push_back(tpe);
 	}
@@ -77,30 +71,24 @@ std::vector<class type*> methods::descriptor_to_type(std::string descriptor)
 	return types;
 }
 
-method_info::~method_info()
-{
-	for(auto a : attributes)
-		delete a;
-}
-
-method_info *methods::parse_meth(class file &file, class cp &cp)
+std::shared_ptr<class method_info> methods::parse_meth(class file &file, class cp &cp)
 {
 	uint16_t access_flags;
 	std::string name;
 	std::string descriptor;
 	uint16_t attributes_count;
-	std::vector<class attribute_info*> attributes;
+	std::vector<std::shared_ptr<class attribute_info>> attributes;
 
 	access_flags = file.read<uint16_t>();
-	name = cp.get<class CONSTANT_Utf8_info*>(file.read<uint16_t>())->value;
-	descriptor = cp.get<class CONSTANT_Utf8_info*>(file.read<uint16_t>())->value;
+	name = cp.get<class CONSTANT_Utf8_info>(file.read<uint16_t>())->value;
+	descriptor = cp.get<class CONSTANT_Utf8_info>(file.read<uint16_t>())->value;
 
 	attributes_count = file.read<uint16_t>();
 	attributes.reserve(attributes_count);
 	for (; attributes_count > 0; attributes_count--)
 		attributes.push_back(attribute::parse(file, cp));
 
-	std::vector<class type*> const &types = descriptor_to_type(descriptor);
+	auto const &types = descriptor_to_type(descriptor);
 
-	return new method_info(access_flags, name, types, attributes);
+	return std::shared_ptr<method_info>(new method_info(access_flags, name, types, attributes));
 }

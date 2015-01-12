@@ -19,16 +19,16 @@ public:
 	clss();
 	clss(std::string name);
 
-	virtual void run_func(std::string const class_name, std::string const name, std::vector<class type*> const &types);
+	virtual void run_func(std::string const class_name, std::string const name, std::vector<std::shared_ptr<class type>> const &types);
 
 	std::shared_ptr<class stack_elem::base> get_field(std::string name);
 	void put_field(std::string name, std::shared_ptr<class stack_elem::base> elem);
 
 private:
-	std::map<std::pair<std::string, std::vector<class type*>>, Code_attribute*> meths;
+	std::map<std::pair<std::string, std::vector<std::shared_ptr<class type>>>, std::shared_ptr<Code_attribute>> meths;
 	std::map<std::string, std::shared_ptr<class stack_elem::base>> fields;
 
-	class bc bc;
+	std::shared_ptr<class bc> bc;
 	std::shared_ptr<class clss> parent;
 
 	std::string name;
@@ -37,13 +37,13 @@ private:
 class print_clss : public clss
 {
 private:
-	void run_func(std::string const class_name, std::string const name, std::vector<class type*> const &types);
+	void run_func(std::string const class_name, std::string const name, std::vector<std::shared_ptr<class type>> const &types);
 };
 
 class StringBuilder : public clss
 {
 private:
-	void run_func(std::string const class_name, std::string const name, std::vector<class type*> const &types);
+	void run_func(std::string const class_name, std::string const name, std::vector<std::shared_ptr<class type>> const &types);
 
 	std::shared_ptr<class stack_elem::class_ref> append(std::shared_ptr<class stack_elem::int_const> elem);
 	std::shared_ptr<class stack_elem::class_ref> append(std::shared_ptr<class stack_elem::string_const> elem);

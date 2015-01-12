@@ -16,7 +16,7 @@
 class bc
 {
 public:
-	static bc parse(std::string const &path);
+	static std::shared_ptr<class bc> parse(std::string const &path);
 
 	bc();
 	bc(class bc const &other);
@@ -32,16 +32,18 @@ public:
 	class self const self;
 	class interface const interface;
 	class field const * const field;
-	class methods const * const methods;
+	class methods const methods;
 
 private:
 	bc(uint32_t magic, uint16_t minor_version, uint16_t major_version,
 	   class cp &&cp, class self self, class interface interface,
-	   class field const * const field, class methods const * const methods)
+	   class field const * const field, class methods const methods)
 		: magic(magic), minor_version(minor_version),
 		  major_version(major_version), cp(std::move(cp)), self(self),
 		  interface(interface), field(field), methods(methods)
 	{}
+
+	static std::map<std::string, std::shared_ptr<class bc>> bcs;
 };
 
 #endif

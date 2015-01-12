@@ -74,14 +74,14 @@ void opcode::ldc::exec(class bc const &bc) const
 
 	class vm &vm = manager::get_instance().get_vm();
 
-	class cp_info *info = bc.cp.get(index);
+	auto info = bc.cp.get(index);
 	std::shared_ptr<class stack_elem::base> elem;
 
-	class CONSTANT_String_info *str;
-	class CONSTANT_Integer_info *integer;
-	if ((str = dynamic_cast<CONSTANT_String_info*>(info)))
+	std::shared_ptr<class CONSTANT_String_info> str;
+	std::shared_ptr<class CONSTANT_Integer_info> integer;
+	if ((str = std::dynamic_pointer_cast<CONSTANT_String_info>(info)))
 		elem = std::shared_ptr<class stack_elem::string_const>(new stack_elem::string_const(str->value));
-	else if ((integer = dynamic_cast<CONSTANT_Integer_info*>(info)))
+	else if ((integer = std::dynamic_pointer_cast<CONSTANT_Integer_info>(info)))
 		elem = std::shared_ptr<class stack_elem::int_const>(new stack_elem::int_const(integer->value));
 
 	vm.stack.push(elem);
@@ -141,7 +141,7 @@ void opcode::getstatic::exec(class bc const &bc __attribute__ ((unused))) const
 void opcode::getfield::exec(class bc const &bc __attribute__ ((unused))) const
 {
 	class vm &vm = manager::get_instance().get_vm();
-	class ref_info *info = bc.cp.get<ref_info*>(index);
+	auto info = bc.cp.get<ref_info>(index);
 
 	log_name("getfield\t\t" + info->name_and_type->name);
 
@@ -154,7 +154,7 @@ void opcode::getfield::exec(class bc const &bc __attribute__ ((unused))) const
 void opcode::putfield::exec(class bc const &bc __attribute__ ((unused))) const
 {
 	class vm &vm = manager::get_instance().get_vm();
-	class ref_info *info = bc.cp.get<ref_info*>(index);
+	auto info = bc.cp.get<ref_info>(index);
 
 	log_name("putfield\t\t" + info->name_and_type->name);
 
@@ -182,7 +182,7 @@ void opcode::pop::exec(class bc const &bc __attribute__ ((unused))) const
 
 void opcode::invokevirtual::exec(class bc const &bc) const
 {
-	ref_info *meth = bc.cp.get<ref_info*>(index);
+	auto meth = bc.cp.get<ref_info>(index);
 
 	log_name("invokevirtual\t\t" + meth->name_and_type->name);
 
@@ -213,7 +213,7 @@ void opcode::op_new::exec(class bc const &bc) const
 {
 	log_name("op_new");
 
-	CONSTANT_Class_info *info = bc.cp.get<CONSTANT_Class_info*>(index);
+	auto info = bc.cp.get<CONSTANT_Class_info>(index);
 
 	auto cls = manager::get_instance().get_class(info->name);
 

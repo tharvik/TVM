@@ -24,7 +24,6 @@ public:
 private:
 	manager() {}
 
-	std::map<std::string, class clss*> classes;
 	std::string class_name;
 
 	static manager instance;
