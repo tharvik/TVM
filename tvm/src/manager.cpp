@@ -9,12 +9,6 @@ class manager &manager::get_instance()
 	return instance;
 };
 
-manager::~manager()
-{
-	for (auto i : classes)
-		delete i.second;
-}
-
 class vm& manager::get_vm()
 {
 	return vms.top();

@@ -23,7 +23,6 @@ public:
 
 private:
 	manager() {}
-	~manager();
 
 	std::map<std::string, class clss*> classes;
 	std::string class_name;

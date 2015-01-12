@@ -16,11 +16,9 @@
 
 namespace stack_elem
 {
-	class base
-	{
+	class base {
 	public:
 		virtual ~base() {}
-		virtual stack_elem::base *copy() = 0;
 	};
 
 #define macro_val_const(name, type, by_default)			\
@@ -42,9 +40,7 @@ namespace stack_elem
 	public:
 		array_ref(uint32_t size);
 
-		std::shared_ptr<std::vector<stack_elem::int_const*>> vec;
-
-		stack_elem::base *copy();
+		std::shared_ptr<std::vector<std::shared_ptr<stack_elem::int_const>>> vec;
 	};
 
 	class class_ref : public base
@@ -52,8 +48,6 @@ namespace stack_elem
 	public:
 		class_ref(std::shared_ptr<class clss> cls) : cls(cls) {}
 		std::shared_ptr<class clss> cls;
-
-		stack_elem::base *copy() {return new class_ref(cls);}
 	};
 
 	class print_class : public class_ref
@@ -73,12 +67,10 @@ public:
 class vm
 {
 public:
-	~vm();
-
 	void exec(class bc const &bc, std::vector<opcode::base*> ops);
 
-	std::stack<class stack_elem::base*> stack;
-	std::vector<class stack_elem::base*> vars;
+	std::stack<std::shared_ptr<class stack_elem::base>> stack;
+	std::vector<std::shared_ptr<class stack_elem::base>> vars;
 
 	void pc_goto(int32_t index);
 

@@ -30,9 +30,7 @@ clss::clss(std::string name)
 	}
 
 	for (class field_info const &info : bc.field->fields) {
-		stack_elem::base *elem;
-		elem = nullptr;
-		fields.insert(std::make_pair(info.name, elem));
+		fields.insert(std::make_pair(info.name, nullptr));
 	}
 
 	class CONSTANT_Class_info *info = bc.cp.get<class CONSTANT_Class_info*>(bc.self.super_class);
@@ -40,12 +38,6 @@ clss::clss(std::string name)
 		parent = nullptr;
 	else
 		parent = std::shared_ptr<class clss>(new clss(info->name));
-}
-
-clss::~clss()
-{
-	for(auto i : fields)
-		delete i.second;
 }
 
 void clss::run_func(std::string const class_name, std::string const name, std::vector<class type*> const &types)
@@ -69,57 +61,59 @@ void print_clss::run_func(std::string const class_name, std::string const name, 
 	if(name != "println")
 		throw "Unimplemented printing func";
 
-	stack_elem::base *elem = manager::get_instance().get_vm().vars.at(1);
+	auto elem = manager::get_instance().get_vm().vars.at(1);
 
 	class type_class *resolved_class;
 	if ((resolved_class = dynamic_cast<type_class*>(types.at(0))) != nullptr
 	    && resolved_class->name == "Ljava/lang/String") {
-		stack_elem::string_const *val = dynamic_cast<stack_elem::string_const*>(elem);
+		auto val = util::dpc<stack_elem::string_const>(elem);
 		std::cout << val->value << std::endl;
-	}
+	} else {
+		auto val = util::dpc<stack_elem::int_const>(elem);
+		class type_elem *resolved_type;
+		if ((resolved_type = dynamic_cast<type_elem*>(types.at(0))) != nullptr
+		    && resolved_type->elm == type::INT)
+			std::cout << val->value << std::endl;
 
-	stack_elem::int_const *val = dynamic_cast<stack_elem::int_const*>(elem);
-	class type_elem *resolved_type;
-	if ((resolved_type = dynamic_cast<type_elem*>(types.at(0))) != nullptr
-	    && resolved_type->elm == type::INT)
-		std::cout << val->value << std::endl;
-
-	else if ((resolved_type = dynamic_cast<type_elem*>(types.at(0))) != nullptr
-		 && resolved_type->elm == type::BOOL) {
-		if(val->value) {
-			std::cout << "true" << std::endl;
-		} else {
-			std::cout << "false" << std::endl;
+		else if ((resolved_type = dynamic_cast<type_elem*>(types.at(0))) != nullptr
+			 && resolved_type->elm == type::BOOL) {
+			if(val->value) {
+				std::cout << "true" << std::endl;
+			} else {
+				std::cout << "false" << std::endl;
+			}
 		}
 	}
 
 	manager::get_instance().vms.pop();
 }
 
-void clss::put_field(std::string name, class stack_elem::base *elem)
+void clss::put_field(std::string name, std::shared_ptr<class stack_elem::base> elem)
 {
 	auto i = fields.find(name);
-	if (i != fields.end()) {
-		delete i->second;
+	if (i != fields.end())
 		fields.erase(i);
-	}
 
 	fields.insert(std::make_pair(name, elem));
 }
 
-class stack_elem::base *clss::get_field(std::string name)
+std::shared_ptr<class stack_elem::base> clss::get_field(std::string name)
 {
 	return fields.at(name);
 }
 
 void StringBuilder::run_func(std::string const class_name, std::string const name, std::vector<class type*> const &types)
 {
-	stack_elem::base *elem = nullptr;
+	std::shared_ptr<stack_elem::base> elem;
 	if (name == "append") {
 		elem = manager::get_instance().get_vm().vars.at(1);
-#define macro_append(type)							\
-		if (stack_elem::type *val = dynamic_cast<stack_elem::type*>(elem))	\
-			elem = append(val);
+
+		std::dynamic_pointer_cast<stack_elem::int_const>(elem);
+
+#define macro_append(type)				\
+		auto val_##type = std::dynamic_pointer_cast<stack_elem::type>(elem);\
+		if (val_##type != nullptr)		\
+			elem = append(val_##type);
 		macro_append(int_const)
 		macro_append(string_const)
 #undef macro_append
@@ -137,23 +131,23 @@ void StringBuilder::run_func(std::string const class_name, std::string const nam
 }
 
 
-class stack_elem::class_ref *StringBuilder::append(class stack_elem::int_const* elem)
+std::shared_ptr<class stack_elem::class_ref> StringBuilder::append(std::shared_ptr<class stack_elem::int_const> elem)
 {
 	auto n = std::shared_ptr<class StringBuilder>(new StringBuilder());
 	n->str = str + std::to_string(elem->value);
 
-	return new stack_elem::class_ref(n);
+	return std::shared_ptr<class stack_elem::class_ref>(new stack_elem::class_ref(n));
 }
 
-class stack_elem::class_ref *StringBuilder::append(class stack_elem::string_const* elem)
+std::shared_ptr<class stack_elem::class_ref> StringBuilder::append(std::shared_ptr<class stack_elem::string_const> elem)
 {
 	auto n = std::shared_ptr<class StringBuilder>(new StringBuilder());
 	n->str = str + elem->value;
 
-	return new stack_elem::class_ref(n);
+	return std::shared_ptr<class stack_elem::class_ref>(new stack_elem::class_ref(n));
 }
 
-class stack_elem::string_const *StringBuilder::toString()
+std::shared_ptr<class stack_elem::string_const> StringBuilder::toString()
 {
-	return new stack_elem::string_const(str);
+	return std::shared_ptr<class stack_elem::string_const>(new stack_elem::string_const(str));
 }

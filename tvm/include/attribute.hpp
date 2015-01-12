@@ -14,22 +14,12 @@ class attribute
 {
 public:
 	static attribute_info *parse(class file& file, class cp& cp);
-
-	enum tag {
-#define attribute_macro(name)	\
-		name,
-#include "../macro/attribute.m"
-#undef attribute_macro
-	};
 private:
 	static attribute_info *get_element(class file& file, class cp& cp,
 					   std::string name);
 
-#define attribute_macro(name)	\
-	static attribute_info *get_element_##name(class file& file,	\
-						  class cp& cp);
-#include "../macro/attribute.m"
-#undef attribute_macro
+	template <typename type>
+	static type *get_element(class file& file, class cp& cp);
 };
 
 class attribute_info
@@ -53,28 +43,10 @@ public:
 	uint16_t const max_stack;
 	uint16_t const max_locals;
 	std::vector<opcode::base*> code;
-
-	/*uint16_t exception_table_length;
-	{   uint16_t start_pc;
-		uint16_t end_pc;
-		uint16_t handler_pc;
-		uint16_t catch_type;
-	}
-	exception_table[exception_table_length];
-	uint16_t attributes_count;
-	attribute_info
-		attributes[attributes_count];*/
 };
 
 class LineNumberTable_attribute : public attribute_info
 {
-	/*
-	    u2 line_number_table_length;
-	    {   u2 start_pc;
-	        u2 line_number;
-	    } line_number_table[line_number_table_length];
-
-	*/
 };
 
 #endif

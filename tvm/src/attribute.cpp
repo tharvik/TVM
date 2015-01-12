@@ -16,21 +16,8 @@ attribute_info *attribute::parse(class file& file, class cp& cp)
 	return get_element(file, cp, name);
 }
 
-attribute_info *attribute::get_element(class file& file, class cp& cp,
-				       std::string name)
-{
-#define attribute_macro(type)				\
-	if (name == #type) {				\
-		return get_element_##type(file, cp);	\
-	}
-#include "../macro/attribute.m"
-#undef attribute_macro
-
-	std::cerr << "Unknow attribute: " << name << std::endl;
-	throw "Unknow attribute: ";
-}
-
-attribute_info *attribute::get_element_Code(class file& file, class cp& cp)
+template<>
+Code_attribute *attribute::get_element<Code_attribute>(class file& file, class cp& cp)
 {
 	uint16_t max_stack;
 	uint16_t max_locals;
@@ -62,7 +49,8 @@ attribute_info *attribute::get_element_Code(class file& file, class cp& cp)
 	return new Code_attribute(max_stack, max_locals, code);
 }
 
-attribute_info *attribute::get_element_LineNumberTable(class file& file __attribute__((unused)), class cp& cp __attribute__((unused)))
+template<>
+LineNumberTable_attribute *attribute::get_element<LineNumberTable_attribute>(class file& file, class cp& cp __attribute__ ((unused)))
 {
 	// drop it
 	uint16_t size = file.read<uint16_t>();
@@ -72,19 +60,20 @@ attribute_info *attribute::get_element_LineNumberTable(class file& file __attrib
 	return new LineNumberTable_attribute();
 }
 
+attribute_info *attribute::get_element(class file& file, class cp& cp,
+				       std::string name)
+{
+	if (name == "Code")
+		return get_element<Code_attribute>(file, cp);
+	if (name == "LineNumberTable")
+		return get_element<LineNumberTable_attribute>(file, cp);
+
+	std::cerr << "Unknow attribute: " << name << std::endl;
+	throw "Unknow attribute: ";
+}
+
 Code_attribute::~Code_attribute()
 {
 	for (opcode::base * elem : code)
 		delete elem;
 }
-
-#define attribute_macro(name)						\
-	attribute_info *attribute::get_element_##name(			\
-			class file& file __attribute__((unused)),	\
-			class cp& cp __attribute__((unused)))		\
-{									\
-	std::cerr << "Unchecked get_element_" #name << std::endl;	\
-	throw "unchecked get_element_" #name;				\
-}
-#include "../macro/attribute_unchecked.m"
-#undef attribute_macro

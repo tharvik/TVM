@@ -18,16 +18,15 @@ class clss
 public:
 	clss();
 	clss(std::string name);
-	virtual ~clss();
 
 	virtual void run_func(std::string const class_name, std::string const name, std::vector<class type*> const &types);
 
-	class stack_elem::base *get_field(std::string name);
-	void put_field(std::string name, class stack_elem::base *elem);
+	std::shared_ptr<class stack_elem::base> get_field(std::string name);
+	void put_field(std::string name, std::shared_ptr<class stack_elem::base> elem);
 
 private:
 	std::map<std::pair<std::string, std::vector<class type*>>, Code_attribute*> meths;
-	std::map<std::string, class stack_elem::base*> fields;
+	std::map<std::string, std::shared_ptr<class stack_elem::base>> fields;
 
 	class bc bc;
 	std::shared_ptr<class clss> parent;
@@ -46,9 +45,9 @@ class StringBuilder : public clss
 private:
 	void run_func(std::string const class_name, std::string const name, std::vector<class type*> const &types);
 
-	class stack_elem::class_ref *append(class stack_elem::int_const* elem);
-	class stack_elem::class_ref *append(class stack_elem::string_const* elem);
-	class stack_elem::string_const *toString();
+	std::shared_ptr<class stack_elem::class_ref> append(std::shared_ptr<class stack_elem::int_const> elem);
+	std::shared_ptr<class stack_elem::class_ref> append(std::shared_ptr<class stack_elem::string_const> elem);
+	std::shared_ptr<class stack_elem::string_const> toString();
 
 	std::string str;
 };
