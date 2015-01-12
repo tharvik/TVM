@@ -17,7 +17,13 @@ std::unique_ptr<opcode::base> opcode::base::parse(file& file)
 	case id:				\
 		return iconst<size>::parse(file);
 #include "../macro/opcode/iconst.m"
-#undef opcode_macro
+#undef macro_iconst
+
+#define macro_push(id, type)			\
+	case id:				\
+		return push<type>::parse(file);
+#include "../macro/opcode/push.m"
+#undef macro_push
 
 
 
@@ -25,7 +31,7 @@ std::unique_ptr<opcode::base> opcode::base::parse(file& file)
 #define opcode_macro(name, id, size)		\
 	case id:				\
 		return name::parse(file);
-#include "../macro/opcode.m"
+#include "../macro/opcode/opcode.m"
 #undef opcode_macro
 	}
 
@@ -121,22 +127,6 @@ opcode_with_index(uint16_t, op_new)
 opcode_with_index(uint16_t, putfield)
 #undef opcode_with_index
 
-#define macro_push(name, type)					\
-std::unique_ptr<class opcode::name> opcode::name::parse(file& file)\
-{								\
-	type index = file.read<type>();				\
-	return std::unique_ptr<name>(new name(index));		\
-}								\
-								\
-void opcode::name::exec(class bc const &bc __attribute__ ((unused))) const \
-{								\
-	log_name(#name);					\
-								\
-	manager::get_instance().get_vm().stack.push(std::shared_ptr<class stack_elem::const_val<int>>(new stack_elem::const_val<int>(byte)));\
-}
-macro_push(bipush, uint8_t)
-macro_push(sipush, uint16_t)
-#undef macro_push
 
 void opcode::getstatic::exec(class bc const &bc __attribute__ ((unused))) const
 {
@@ -520,20 +510,6 @@ void opcode::iaload::exec(class bc const& bc __attribute__ ((unused))) const
 	vm.stack.push(value);
 }
 
-#define opcode_macro(name, id, length)					\
-std::unique_ptr<opcode::name> opcode::name::parse(file& file __attribute__ ((unused)))\
-{									\
-	std::cerr << "Unchecked opcode: " #name << std::endl;		\
-	throw "Unchecked opcode";					\
-}									\
-									\
-void opcode::name::exec(						\
-		class bc const &bc __attribute__ ((unused))) const	\
-{									\
-}									\
-
-#include "../macro/opcode_unchecked.m"
-#undef opcode_macro
 
 
 
@@ -554,5 +530,24 @@ namespace opcode
 		class vm &vm = manager::get_instance().get_vm();
 		auto elem = std::shared_ptr<class stack_elem::const_val<int>>(new stack_elem::const_val<int>(num));
 		vm.stack.push(elem);
+	}
+}
+
+namespace opcode
+{
+	template<typename type>
+	std::unique_ptr<class base> push<type>::parse(file& file)
+	{
+		type index = file.read<type>();
+		return std::unique_ptr<push<type>>(new push<type>(index));
+	}
+
+	template<typename type>
+	void push<type>::exec(class bc const &bc __attribute__ ((unused))) const
+	{
+		log_name("push" + sizeof(type));
+
+		auto elem = std::make_shared<class stack_elem::const_val<int>>(data);
+		manager::get_instance().get_vm().stack.push(elem);
 	}
 }

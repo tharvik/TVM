@@ -21,4 +21,6 @@ std::shared_ptr<to> util::dpc(std::shared_ptr<from> obj)
 	return ptr;
 }
 
+
+
 #endif // UTIL_HPP
