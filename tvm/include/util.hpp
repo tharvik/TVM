@@ -7,22 +7,8 @@
 namespace util
 {
 	template<typename to, typename from = void*>
-	to dn(from obj);
-
-	template<typename to, typename from = void*>
 	std::shared_ptr<to> dpc(std::shared_ptr<from> obj);
 };
-
-template<typename to, typename from>
-to util::dn(from obj)
-{
-	to ptr = dynamic_cast<to>(obj);
-
-	if (ptr == nullptr)
-		throw std::bad_cast();
-
-	return ptr;
-}
 
 template<typename to, typename from>
 std::shared_ptr<to> util::dpc(std::shared_ptr<from> obj)

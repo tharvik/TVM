@@ -7,7 +7,7 @@ static void log_name(std::string name)
 	std::cerr << manager::get_instance().vms.size() << ":" << manager::get_instance().get_vm().stack.size() << " ~ " << name << std::endl;
 }
 
-opcode::base *opcode::base::parse(file& file)
+std::unique_ptr<opcode::base> opcode::base::parse(file& file)
 {
 	uint8_t op = file.read<uint8_t>();
 
@@ -88,10 +88,10 @@ void opcode::ldc::exec(class bc const &bc) const
 }
 
 #define opcode_with_index(type, name)			\
-class opcode::name *opcode::name::parse(file& file)	\
+std::unique_ptr<class opcode::name> opcode::name::parse(file& file)	\
 {							\
 	type index = file.read<type>();			\
-	return new name(index);				\
+	return std::unique_ptr<name>(new name(index));	\
 }
 opcode_with_index(uint16_t, invokespecial)
 opcode_with_index(uint16_t, invokevirtual)
@@ -112,10 +112,10 @@ opcode_with_index(uint16_t, putfield)
 #undef opcode_with_index
 
 #define macro_push(name, type)					\
-class opcode::name *opcode::name::parse(file& file)		\
+std::unique_ptr<class opcode::name> opcode::name::parse(file& file)\
 {								\
 	type index = file.read<type>();				\
-	return new name(index);					\
+	return std::unique_ptr<name>(new name(index));		\
 }								\
 								\
 void opcode::name::exec(class bc const &bc __attribute__ ((unused))) const \
@@ -202,11 +202,7 @@ void opcode::invokevirtual::exec(class bc const &bc) const
 	auto ref = util::dpc<stack_elem::class_ref>(args.at(0));
 	old_stack.pop();
 
-	manager::get_instance().vms.push(vm());
-	class vm &vm = manager::get_instance().get_vm();
-	vm.vars = args;
-
-	ref->cls->run_func(meth->clss->name, meth->name_and_type->name, meth->name_and_type->types);
+	ref->cls->run_func(meth->clss->name, meth->name_and_type->name, meth->name_and_type->types, args);
 }
 
 void opcode::op_new::exec(class bc const &bc) const
@@ -235,9 +231,9 @@ void opcode::newarray::exec(class bc const &bc __attribute__ ((unused))) const
 }
 
 #define trivial_opcode(name)							\
-class opcode::name *opcode::name::parse(file& file __attribute__ ((unused)))	\
+std::unique_ptr<class opcode::name> opcode::name::parse(file& file __attribute__ ((unused)))	\
 {										\
-	return new name();							\
+	return std::unique_ptr<name>(new name());				\
 }
 trivial_opcode(aload_0)
 trivial_opcode(aload_1)
@@ -380,13 +376,13 @@ macro_return(i)
 #undef macro_return
 
 #define opcode_if(name)				\
-opcode::name *opcode::name::parse(file& file)	\
+std::unique_ptr<opcode::name> opcode::name::parse(file& file)\
 {						\
 	int16_t branch;				\
 						\
 	branch = file.read<uint16_t>();		\
 						\
-	return new name(branch);		\
+	return std::unique_ptr<name>(new name(branch));\
 }
 opcode_if(if_acmpeq)
 opcode_if(if_acmpne)
@@ -482,7 +478,8 @@ void opcode::op_return::exec(class bc const& bc __attribute__ ((unused))) const
 {
 	log_name("op_return");
 
-	manager::get_instance().vms.pop();
+	auto &vms = manager::get_instance().vms;
+	vms.pop();
 }
 
 void opcode::op_goto::exec(class bc const& bc __attribute__ ((unused))) const
@@ -537,11 +534,10 @@ void opcode::iaload::exec(class bc const& bc __attribute__ ((unused))) const
 }
 
 #define opcode_macro(name, id, length)					\
-opcode::name *opcode::name::parse(file& file __attribute__ ((unused)))	\
+std::unique_ptr<opcode::name> opcode::name::parse(file& file __attribute__ ((unused)))\
 {									\
 	std::cerr << "Unchecked opcode: " #name << std::endl;		\
 	throw "Unchecked opcode";					\
-									\
 }									\
 									\
 void opcode::name::exec(						\

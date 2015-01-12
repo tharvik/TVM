@@ -67,7 +67,8 @@ public:
 class vm
 {
 public:
-	void exec(class bc const &bc, std::vector<opcode::base*> ops);
+	vm(class bc const &bc, std::vector<std::unique_ptr<opcode::base>> const &ops);
+	void exec();
 
 	std::stack<std::shared_ptr<class stack_elem::base>> stack;
 	std::vector<std::shared_ptr<class stack_elem::base>> vars;
@@ -76,7 +77,9 @@ public:
 
 private:
 	uint32_t pc;
-	std::vector<opcode::base*> ops;
+
+	class bc const &bc;
+	std::vector<std::unique_ptr<opcode::base>> const &ops;
 };
 
 #endif // VM_HPP

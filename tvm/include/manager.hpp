@@ -3,6 +3,7 @@
 
 #include "bc_h.hpp"
 #include "vm.hpp"
+#include "opcode.hpp"
 
 #include <string>
 #include <map>

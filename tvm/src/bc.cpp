@@ -24,7 +24,7 @@ std::shared_ptr<class bc> bc::parse(std::string const &path)
 	class cp cp(file);
 	class self self(file);
 	class interface interface(file);
-	class field *field = field::parse(file, cp);
+	class field field(field::parse(file, cp));
 	class methods methods(methods::parse(file, cp));
 
 	auto inst = std::shared_ptr<class bc>(new bc(magic, minor_version, major_version, std::move(cp),
@@ -35,7 +35,7 @@ std::shared_ptr<class bc> bc::parse(std::string const &path)
 	return bcs.find(path)->second;
 }
 
-bc::bc() : magic(0), minor_version(0), major_version(0), field(nullptr)
+bc::bc() : magic(0), minor_version(0), major_version(0)
 {
 
 }
@@ -46,12 +46,7 @@ field(other.field), methods(other.methods)
 
 }
 
-bc::~bc()
-{
-	delete field;
-}
-
-std::vector<opcode::base*> bc::get_main() const
+std::vector<std::unique_ptr<opcode::base>> bc::get_main() const
 {
 	std::vector<std::shared_ptr<class attribute_info>> attributes;
 	for (auto m : methods.meths)
@@ -62,5 +57,5 @@ std::vector<opcode::base*> bc::get_main() const
 
  	std::shared_ptr<class Code_attribute> code = util::dpc<class Code_attribute>(attributes.at(0));
 
-	return code->code;
+	return std::move(code->code);
 }

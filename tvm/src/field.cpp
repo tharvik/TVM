@@ -7,7 +7,7 @@
 
 #include <iostream>
 
-class field *field::parse(file& file, cp &cp)
+class field field::parse(file& file, cp &cp)
 {
 	uint16_t count = file.read<uint16_t>();
 
@@ -17,7 +17,7 @@ class field *field::parse(file& file, cp &cp)
 		fields.push_back(field);
 	}
 
-	return new field(std::move(fields));
+	return field(std::move(fields));
 }
 
 field_info const field::get_element(file& file, cp& cp)

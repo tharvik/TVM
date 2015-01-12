@@ -22,7 +22,7 @@ namespace opcode
 	public:
 		virtual ~base() {}
 
-		static base *parse(file& file);
+		static std::unique_ptr<base> parse(file& file);
 
 		short const size;
 
@@ -35,7 +35,7 @@ namespace opcode
 	class iconst_##num : public base		\
 	{						\
 	public:						\
-		static iconst_##num *parse(file& file);	\
+		static std::unique_ptr<class iconst_##num> parse(file& file);\
 		void exec(class bc const &bc) const;	\
 							\
 	private:					\
@@ -54,7 +54,7 @@ namespace opcode
 	public:							\
 		type const index;				\
 								\
-		static class name *parse(file& file);		\
+		static std::unique_ptr<class name> parse(file& file);\
 		void exec(class bc const &bc) const;		\
 	private:						\
 		name(type index) : base(size), index(index) {}	\
@@ -81,7 +81,7 @@ namespace opcode
 #define opcode_trivial(name)			\
 	class name : public base {			\
 	public:						\
-		static name *parse(file& file);		\
+		static std::unique_ptr<class name> parse(file& file);\
 		void exec(class bc const &bc) const;	\
 							\
 	private:					\
@@ -128,7 +128,7 @@ namespace opcode
 	class name : public base			\
 	{						\
 	public:						\
-		static name *parse(file& file);		\
+		static std::unique_ptr<class name> parse(file& file);\
 		void exec(class bc const &bc) const;	\
 	private:					\
 		int16_t const branch;			\
@@ -160,7 +160,7 @@ namespace opcode
 #define opcode_macro(name, id, size)		\
 	class name : public base {			\
 	public:						\
-		static name *parse(file& file);		\
+		static std::unique_ptr<class name>parse(file& file);		\
 		void exec(class bc const &bc) const;	\
 							\
 	private:					\
@@ -175,7 +175,7 @@ namespace opcode
 	public:							\
 		type const byte;				\
 								\
-		static class name *parse(file& file);		\
+		static std::unique_ptr<class name> parse(file& file);		\
 		void exec(class bc const &bc) const;		\
 	private:						\
 		name(type byte) : base(size), byte(byte) {}	\

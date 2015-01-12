@@ -2,12 +2,12 @@
 
 #include "opcode.hpp"
 
-void vm::exec(class bc const &bc, std::vector<opcode::base*> ops)
+vm::vm(class bc const &bc, std::vector<std::unique_ptr<opcode::base>> const &ops) : pc(0), bc(bc), ops(ops)
 {
-	this->ops = ops;
+}
 
-	pc = 0;
-
+void vm::exec()
+{
 	while (pc < ops.size()) {
 		ops.at(pc)->exec(bc);
 		pc++;

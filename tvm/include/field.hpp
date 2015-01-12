@@ -15,7 +15,8 @@ class field_info;
 class field
 {
 public:
-	static class field *parse(class file& file, class cp &cp);
+	static class field parse(class file& file, class cp &cp);
+	field() {}
 
 	std::vector<class field_info> const fields;
 

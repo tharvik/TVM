@@ -3,7 +3,7 @@
 
 #include "file_h.hpp"
 #include "cp_h.hpp"
-#include "opcode_h.hpp"
+#include "opcode.hpp"
 
 #include <cstdint>
 #include <string>
@@ -35,15 +35,13 @@ class Code_attribute : public attribute_info
 {
 public:
 	Code_attribute(uint16_t max_stack, uint16_t max_locals,
-		       std::vector<opcode::base*> code)
+		       std::vector<std::unique_ptr<opcode::base>> code)
 		: max_stack(max_stack),
-		  max_locals(max_locals), code(code) {}
-
-	~Code_attribute();
+		  max_locals(max_locals), code(std::move(code)) {}
 
 	uint16_t const max_stack;
 	uint16_t const max_locals;
-	std::vector<opcode::base*> code;
+	std::vector<std::unique_ptr<opcode::base>> code;
 };
 
 class LineNumberTable_attribute : public attribute_info

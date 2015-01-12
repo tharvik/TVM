@@ -20,8 +20,6 @@ void manager::run(std::string name)
 
 	class_name = name;
 
-	vms.push(vm());
-
 	std::vector<std::shared_ptr<class type>> types;
 
 	auto str = type::get("Ljava/lang/String");
@@ -31,7 +29,7 @@ void manager::run(std::string name)
 	auto vod = type::get(type::VOID);
 	types.push_back(vod);
 
-	cls.run_func(class_name, "main", types);
+	cls.run_func(class_name, "main", types, std::vector<std::shared_ptr<class stack_elem::base>>());
 }
 
 std::shared_ptr<class clss> manager::get_class(std::string name)

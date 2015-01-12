@@ -21,7 +21,7 @@ std::shared_ptr<Code_attribute> attribute::get_element<Code_attribute>(class fil
 {
 	uint16_t max_stack;
 	uint16_t max_locals;
-	std::vector<opcode::base*> code;
+	std::vector<std::unique_ptr<opcode::base>> code;
 
 	max_stack = file.read<uint16_t>();
 	max_locals = file.read<uint16_t>();
@@ -30,10 +30,9 @@ std::shared_ptr<Code_attribute> attribute::get_element<Code_attribute>(class fil
 	code.reserve(size);
 
 	while (size > 0) {
-		class opcode::base *opcode = opcode::base::parse(file);
-		code.push_back(opcode);
-
+		auto opcode(opcode::base::parse(file));
 		size -= opcode->size;
+		code.push_back(std::move(opcode));
 	}
 
 	// drop it
@@ -46,7 +45,7 @@ std::shared_ptr<Code_attribute> attribute::get_element<Code_attribute>(class fil
 	for (; attributes_count > 0; attributes_count--)
 		attribute::parse(file, cp);
 
-	return std::shared_ptr<Code_attribute>(new Code_attribute(max_stack, max_locals, code));
+	return std::shared_ptr<Code_attribute>(new Code_attribute(max_stack, max_locals, std::move(code)));
 }
 
 template<>
@@ -71,10 +70,4 @@ std::shared_ptr<attribute_info> attribute::get_element(class file& file, class c
 
 	std::cerr << "Unknow attribute: " << name << std::endl;
 	throw "Unknow attribute: ";
-}
-
-Code_attribute::~Code_attribute()
-{
-	for (opcode::base * elem : code)
-		delete elem;
 }

@@ -29,7 +29,7 @@ clss::clss(std::string name)
 		meths.insert(std::make_pair(std::make_pair(info->name, info->types), code));
 	}
 
-	for (class field_info const &info : bc->field->fields) {
+	for (class field_info const &info : bc->field.fields) {
 		fields.insert(std::make_pair(info.name, nullptr));
 	}
 
@@ -40,28 +40,38 @@ clss::clss(std::string name)
 		parent = std::make_shared<class clss>(info->name);
 }
 
-void clss::run_func(std::string const class_name, std::string const name, std::vector<std::shared_ptr<class type>> const &types)
+void clss::run_func(
+		std::string const class_name,
+		std::string const name,
+		std::vector<std::shared_ptr<class type>> const &types,
+		std::vector<std::shared_ptr<class stack_elem::base>> args)
 {
-	class vm &vm = manager::get_instance().get_vm();
-
 	auto i = meths.find(std::make_pair(name, types));
 
 	if (i == meths.end()) {
-		parent->run_func(class_name, name, types);
+		parent->run_func(class_name, name, types, args);
 	} else {
 		auto attr = i->second;
-		vm.vars.resize(attr->max_locals);
 
-		vm.exec(*bc, attr->code);
+		class vm vma(*bc, attr->code);
+		manager::get_instance().vms.push(std::move(vma));
+		class vm &vm = manager::get_instance().get_vm();
+		vm.vars = args;
+		vm.vars.resize(attr->max_locals);
+		vm.exec();
 	}
 }
 
-void print_clss::run_func(std::string const class_name, std::string const name __attribute__ ((unused)), std::vector<std::shared_ptr<class type>> const &types)
+void print_clss::run_func(
+			std::string const class_name __attribute__ ((unused)),
+			std::string const name,
+			std::vector<std::shared_ptr<class type>> const &types,
+			std::vector<std::shared_ptr<class stack_elem::base>> args)
 {
 	if(name != "println")
 		throw "Unimplemented printing func";
 
-	auto elem = manager::get_instance().get_vm().vars.at(1);
+	auto elem = args.at(1);
 
 	std::shared_ptr<class type_class> resolved_class;
 	if ((resolved_class = std::dynamic_pointer_cast<type_class>(types.at(0))) != nullptr
@@ -84,8 +94,6 @@ void print_clss::run_func(std::string const class_name, std::string const name _
 			}
 		}
 	}
-
-	manager::get_instance().vms.pop();
 }
 
 void clss::put_field(std::string name, std::shared_ptr<class stack_elem::base> elem)
@@ -102,12 +110,15 @@ std::shared_ptr<class stack_elem::base> clss::get_field(std::string name)
 	return fields.at(name);
 }
 
-void StringBuilder::run_func(std::string const class_name __attribute__ ((unused)), std::string const name,
-			std::vector<std::shared_ptr<class type>> const &types __attribute__ ((unused)))
+void StringBuilder::run_func(
+			std::string const class_name __attribute__ ((unused)),
+			std::string const name,
+			std::vector<std::shared_ptr<class type>> const &types __attribute__ ((unused)),
+			std::vector<std::shared_ptr<class stack_elem::base>> args)
 {
 	std::shared_ptr<stack_elem::base> elem;
 	if (name == "append") {
-		elem = manager::get_instance().get_vm().vars.at(1);
+		elem = args.at(1);
 
 		std::dynamic_pointer_cast<stack_elem::int_const>(elem);
 
@@ -127,7 +138,6 @@ void StringBuilder::run_func(std::string const class_name __attribute__ ((unused
 	if (elem == nullptr)
 		throw "elem not set";
 
-	manager::get_instance().vms.pop();
 	manager::get_instance().get_vm().stack.push(elem);
 }
 
