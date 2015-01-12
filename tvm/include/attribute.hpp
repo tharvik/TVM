@@ -26,7 +26,7 @@ private:
 class attribute_info
 {
 public:
-	virtual ~attribute_info() {}
+	virtual ~attribute_info() {} // only used for the vtable
 protected:
 	attribute_info() {}
 };

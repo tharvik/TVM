@@ -12,6 +12,16 @@ std::unique_ptr<opcode::base> opcode::base::parse(file& file)
 	uint8_t op = file.read<uint8_t>();
 
 	switch(op) {
+
+#define macro_iconst(id, size)			\
+	case id:				\
+		return iconst<size>::parse(file);
+#include "../macro/opcode/iconst.m"
+#undef opcode_macro
+
+
+
+
 #define opcode_macro(name, id, size)		\
 	case id:				\
 		return name::parse(file);
@@ -30,12 +40,12 @@ void opcode::name::exec(class bc const &bc __attribute__ ((unused))) const	\
 										\
 	class vm &vm = manager::get_instance().get_vm();					\
 										\
-	auto b = util::dpc<stack_elem::int_const>(vm.stack.top());\
+	auto b = util::dpc<stack_elem::const_val<int>>(vm.stack.top());\
 	vm.stack.pop();								\
-	auto a = util::dpc<stack_elem::int_const>(vm.stack.top());\
+	auto a = util::dpc<stack_elem::const_val<int>>(vm.stack.top());\
 	vm.stack.pop();								\
 										\
-	auto elem = std::shared_ptr<stack_elem::int_const>(new stack_elem::int_const(a->value op b->value));\
+	auto elem = std::shared_ptr<stack_elem::const_val<int>>(new stack_elem::const_val<int>(a->value op b->value));\
 	vm.stack.push(elem);							\
 }
 opcode_macro(iadd, +)
@@ -80,9 +90,9 @@ void opcode::ldc::exec(class bc const &bc) const
 	std::shared_ptr<class CONSTANT_String_info> str;
 	std::shared_ptr<class CONSTANT_Integer_info> integer;
 	if ((str = std::dynamic_pointer_cast<CONSTANT_String_info>(info)))
-		elem = std::shared_ptr<class stack_elem::string_const>(new stack_elem::string_const(str->value));
+		elem = std::shared_ptr<class stack_elem::const_val<std::string>>(new stack_elem::const_val<std::string>(str->value));
 	else if ((integer = std::dynamic_pointer_cast<CONSTANT_Integer_info>(info)))
-		elem = std::shared_ptr<class stack_elem::int_const>(new stack_elem::int_const(integer->value));
+		elem = std::shared_ptr<class stack_elem::const_val<int>>(new stack_elem::const_val<int>(integer->value));
 
 	vm.stack.push(elem);
 }
@@ -122,7 +132,7 @@ void opcode::name::exec(class bc const &bc __attribute__ ((unused))) const \
 {								\
 	log_name(#name);					\
 								\
-	manager::get_instance().get_vm().stack.push(std::shared_ptr<class stack_elem::int_const>(new stack_elem::int_const(byte)));\
+	manager::get_instance().get_vm().stack.push(std::shared_ptr<class stack_elem::const_val<int>>(new stack_elem::const_val<int>(byte)));\
 }
 macro_push(bipush, uint8_t)
 macro_push(sipush, uint16_t)
@@ -223,7 +233,7 @@ void opcode::newarray::exec(class bc const &bc __attribute__ ((unused))) const
 
 	class vm &vm = manager::get_instance().get_vm();
 
-	auto count = util::dpc<stack_elem::int_const>(vm.stack.top());
+	auto count = util::dpc<stack_elem::const_val<int>>(vm.stack.top());
 	vm.stack.pop();
 
 	auto elem = std::shared_ptr<class stack_elem::array_ref>(new stack_elem::array_ref(count->value));
@@ -255,13 +265,6 @@ trivial_opcode(isub)
 
 trivial_opcode(iaload)
 trivial_opcode(iastore)
-
-trivial_opcode(iconst_0)
-trivial_opcode(iconst_1)
-trivial_opcode(iconst_2)
-trivial_opcode(iconst_3)
-trivial_opcode(iconst_4)
-trivial_opcode(iconst_5)
 
 trivial_opcode(iload_0)
 trivial_opcode(iload_1)
@@ -308,22 +311,6 @@ void opcode::type##load::exec(class bc const &bc __attribute__ ((unused))) const
 load_macro(a)
 load_macro(i)
 #undef load_macro
-
-#define iconst_macro(num)								\
-void opcode::iconst_##num::exec(class bc const &bc __attribute__ ((unused))) const	\
-{											\
-	log_name("iconst_" #num);							\
-	class vm &vm = manager::get_instance().get_vm();				\
-	auto elem = std::shared_ptr<class stack_elem::int_const>(new stack_elem::int_const(num));\
-	vm.stack.push(elem);								\
-}
-iconst_macro(0)
-iconst_macro(1)
-iconst_macro(2)
-iconst_macro(3)
-iconst_macro(4)
-iconst_macro(5)
-#undef iconst_macro
 
 #define store_macro(type, num)								\
 void opcode::type##store_##num::exec(class bc const &bc __attribute__ ((unused))) const	\
@@ -417,9 +404,9 @@ void opcode::if_acmp##name::exec(class bc const& bc __attribute__ ((unused))) co
 		auto value1 = util::dpc<class stack_elem::class_ref>(vm.stack.top()); vm.stack.pop();\
 								\
 		comp = value1->cls op value2->cls;		\
-	} else if (dynamic_cast<class stack_elem::string_const*>(&*vm.stack.top()) != nullptr) {\
-		auto value2 = util::dpc<class stack_elem::string_const>(vm.stack.top()); vm.stack.pop();\
-		auto value1 = util::dpc<class stack_elem::string_const>(vm.stack.top()); vm.stack.pop();\
+	} else if (dynamic_cast<class stack_elem::const_val<std::string>*>(&*vm.stack.top()) != nullptr) {\
+		auto value2 = util::dpc<class stack_elem::const_val<std::string>>(vm.stack.top()); vm.stack.pop();\
+		auto value1 = util::dpc<class stack_elem::const_val<std::string>>(vm.stack.top()); vm.stack.pop();\
 								\
 		comp = &value1 op &value2;			\
 	} else							\
@@ -439,8 +426,8 @@ void opcode::if_icmp##name::exec(class bc const& bc __attribute__ ((unused))) co
 								\
 	class vm &vm = manager::get_instance().get_vm();	\
 								\
-	auto value2 = util::dpc<class stack_elem::int_const>(vm.stack.top()); vm.stack.pop();\
-	auto value1 = util::dpc<class stack_elem::int_const>(vm.stack.top()); vm.stack.pop();\
+	auto value2 = util::dpc<class stack_elem::const_val<int>>(vm.stack.top()); vm.stack.pop();\
+	auto value1 = util::dpc<class stack_elem::const_val<int>>(vm.stack.top()); vm.stack.pop();\
 								\
 	if (value1->value op value2->value)			\
 		vm.pc_goto(branch);				\
@@ -460,7 +447,7 @@ void opcode::if##name::exec(class bc const& bc __attribute__ ((unused))) const		
 											\
 	class vm &vm = manager::get_instance().get_vm();				\
 											\
-	auto a = util::dpc<class stack_elem::int_const>(vm.stack.top()); vm.stack.pop();\
+	auto a = util::dpc<class stack_elem::const_val<int>>(vm.stack.top()); vm.stack.pop();\
 	int val = a->value;								\
 											\
 	if (val op 0)									\
@@ -495,9 +482,9 @@ void opcode::iastore::exec(class bc const& bc __attribute__ ((unused))) const
 
 	class vm &vm = manager::get_instance().get_vm();
 
-	auto value = util::dpc<stack_elem::int_const>(vm.stack.top());
+	auto value = util::dpc<stack_elem::const_val<int>>(vm.stack.top());
 	vm.stack.pop();
-	auto index = util::dpc<stack_elem::int_const>(vm.stack.top());
+	auto index = util::dpc<stack_elem::const_val<int>>(vm.stack.top());
 	vm.stack.pop();
 	auto array = util::dpc<stack_elem::array_ref>(vm.stack.top());
 	vm.stack.pop();
@@ -514,7 +501,7 @@ void opcode::arraylength::exec(class bc const& bc __attribute__ ((unused))) cons
 	auto array = util::dpc<stack_elem::array_ref>(vm.stack.top());
 	vm.stack.pop();
 
-	auto elem = std::shared_ptr<class stack_elem::int_const>(new stack_elem::int_const(array->vec->size()));
+	auto elem = std::shared_ptr<class stack_elem::const_val<int>>(new stack_elem::const_val<int>(array->vec->size()));
 	vm.stack.push(elem);
 }
 
@@ -524,7 +511,7 @@ void opcode::iaload::exec(class bc const& bc __attribute__ ((unused))) const
 
 	class vm &vm = manager::get_instance().get_vm();
 
-	auto index = util::dpc<stack_elem::int_const>(vm.stack.top());
+	auto index = util::dpc<stack_elem::const_val<int>>(vm.stack.top());
 	vm.stack.pop();
 	auto array = util::dpc<stack_elem::array_ref>(vm.stack.top());
 	vm.stack.pop();
@@ -547,3 +534,25 @@ void opcode::name::exec(						\
 
 #include "../macro/opcode_unchecked.m"
 #undef opcode_macro
+
+
+
+
+
+namespace opcode
+{
+	template<short num>
+	std::unique_ptr<class base> iconst<num>::parse(class file& file __attribute__ ((unused)))
+	{
+		return std::unique_ptr<class iconst<num>>(new iconst<num>());
+	}
+
+	template<short num>
+	void iconst<num>::exec(class bc const &bc __attribute__ ((unused))) const
+	{
+		log_name("iconst_" + num);
+		class vm &vm = manager::get_instance().get_vm();
+		auto elem = std::shared_ptr<class stack_elem::const_val<int>>(new stack_elem::const_val<int>(num));
+		vm.stack.push(elem);
+	}
+}

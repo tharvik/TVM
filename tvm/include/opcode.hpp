@@ -16,13 +16,12 @@ namespace opcode
 
 namespace opcode
 {
-
 	class base
 	{
 	public:
-		virtual ~base() {}
+		virtual ~base() {} // only for vtable
 
-		static std::unique_ptr<base> parse(file& file);
+		static std::unique_ptr<base> parse(class file& file);
 
 		short const size;
 
@@ -31,23 +30,16 @@ namespace opcode
 		base(short size) : size(size) {}
 	};
 
-#define load_macro(num)			\
-	class iconst_##num : public base		\
-	{						\
-	public:						\
-		static std::unique_ptr<class iconst_##num> parse(file& file);\
-		void exec(class bc const &bc) const;	\
-							\
-	private:					\
-		iconst_##num() : base(1) {}		\
+	template<short num>
+	class iconst : public base
+	{
+	public:
+		static std::unique_ptr<class base> parse(class file &file);
+		void exec(class bc const &bc) const;
+
+	private:
+		iconst<num>() : base(1) {}
 	};
-	load_macro(0)
-	load_macro(1)
-	load_macro(2)
-	load_macro(3)
-	load_macro(4)
-	load_macro(5)
-#undef load_macro
 
 #define opcode_with_index(name, size, type)			\
 	class name : public base {				\

@@ -18,11 +18,6 @@ class bc
 public:
 	static std::shared_ptr<class bc> parse(std::string const &path);
 
-	bc();
-	bc(class bc const &other);
-
-	std::vector<std::unique_ptr<opcode::base>> get_main() const;
-
 	uint32_t const magic;
 	uint16_t const minor_version;
 	uint16_t const major_version;
@@ -35,11 +30,11 @@ public:
 
 private:
 	bc(uint32_t magic, uint16_t minor_version, uint16_t major_version,
-	   class cp &&cp, class self self, class interface interface,
-	   class field const field, class methods const methods)
+	   class cp &&cp, class self &&self, class interface &&interface,
+	   class field &&field, class methods &&methods)
 		: magic(magic), minor_version(minor_version),
-		  major_version(major_version), cp(std::move(cp)), self(self),
-		  interface(interface), field(field), methods(methods)
+		  major_version(major_version), cp(std::move(cp)), self(std::move(self)),
+		  interface(std::move(interface)), field(std::move(field)), methods(std::move(methods))
 	{}
 
 	static std::map<std::string, std::shared_ptr<class bc>> bcs;

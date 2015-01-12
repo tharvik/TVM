@@ -6,8 +6,10 @@
 class interface
 {
 public:
+	static class interface parse(class file &file);
+
+private:
 	interface();
-	interface(class file& file);
 };
 
 #endif

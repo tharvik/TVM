@@ -32,9 +32,22 @@ void vm::pc_goto(int32_t index)
 	pc = i;
 }
 
-stack_elem::array_ref::array_ref(uint32_t size) : vec(new std::vector<std::shared_ptr<stack_elem::int_const>>())
+stack_elem::array_ref::array_ref(uint32_t size) : vec(new std::vector<std::shared_ptr<stack_elem::const_val<int>>>())
 {
 	vec->reserve(size);
 	for(; size > 0; size--)
-		vec->push_back(std::make_shared<class stack_elem::int_const>(0));
+		vec->push_back(std::make_shared<class stack_elem::const_val<int>>(0));
+}
+
+namespace stack_elem
+{
+#define macro_const_val(type, default)					\
+	template<>							\
+	const_val<type>::const_val(type value) : value(value) {};	\
+	template<>							\
+	const_val<type>::const_val() : value(default) {};
+macro_const_val(int, 0)
+macro_const_val(bool, false)
+macro_const_val(std::string, "")
+#undef macro_const_val
 }

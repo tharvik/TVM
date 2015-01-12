@@ -57,9 +57,9 @@ private:
 		std::vector<std::shared_ptr<class type>> const &types,
 		std::vector<std::shared_ptr<class stack_elem::base>> args);
 
-	std::shared_ptr<class stack_elem::class_ref> append(std::shared_ptr<class stack_elem::int_const> elem);
-	std::shared_ptr<class stack_elem::class_ref> append(std::shared_ptr<class stack_elem::string_const> elem);
-	std::shared_ptr<class stack_elem::string_const> toString();
+	std::shared_ptr<class stack_elem::class_ref> append(std::shared_ptr<class stack_elem::const_val<int>> elem);
+	std::shared_ptr<class stack_elem::class_ref> append(std::shared_ptr<class stack_elem::const_val<std::string>> elem);
+	std::shared_ptr<class stack_elem::const_val<std::string>> toString();
 
 	std::string str;
 };

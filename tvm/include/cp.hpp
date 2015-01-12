@@ -12,27 +12,16 @@ class cp_info;
 class cp
 {
 public:
-	cp();
-	cp(class file& file);
-	cp(class cp& other);
-	cp(class cp&& other);
+	static class cp parse(class file &file);
 
 	template<typename type = class cp_info>
 	std::shared_ptr<type> get(uint16_t index) const;
 
-	enum tag {
-		CONSTANT_Fieldref = 9,
-		CONSTANT_Methodref = 10,
-		CONSTANT_InterfaceMethodref = 11,
-#define cp_macro(name, id)	\
-	name = id,
-#include "../macro/cp.m"
-#undef cp_macro
-	};
-
 private:
+	cp(std::vector<std::shared_ptr<class cp_info>> &&elements);
+	static void add_element(file& file, std::vector<std::shared_ptr<class cp_info>> &elements);
+
 	std::vector<std::shared_ptr<class cp_info>> elements;
-	void add_element(file& file);
 };
 
 template<typename type>
@@ -42,40 +31,29 @@ std::shared_ptr<type> cp::get(uint16_t index) const
 	return util::dpc<type>(elem);
 }
 
-#include <cstdint>
 class cp_info
 {
 public:
-	virtual ~cp_info() {}
+	virtual ~cp_info() {} // only for vtable
 };
 
-#include "type.hpp"
-
-#include <cstdint>
 class CONSTANT_Utf8_info : public cp_info
 {
 public:
-	static std::shared_ptr<class CONSTANT_Utf8_info> parse(class file &file, class cp const &cp);
-
-	CONSTANT_Utf8_info(std::string value)
-		: value(value) {}
+	static std::shared_ptr<class CONSTANT_Utf8_info> parse(class file &file, std::vector<std::shared_ptr<class cp_info>> &elements);
 
 	const std::string value;
-};
 
-#define cp_macro(name, id, size)						\
-class name##_info : public cp_info {						\
-public:										\
-	static std::shared_ptr<class name##_info> parse(class file &file, class cp const &cp);	\
+private:
+	CONSTANT_Utf8_info(std::string value)
+		: value(value) {}
 };
-
-#include "../macro/cp_unchecked.m"
-#undef cp_macro
 
 class CONSTANT_Class_info : public cp_info
 {
 public:
-	static std::shared_ptr<class CONSTANT_Class_info> parse(class file &file, class cp const &cp);
+	static std::shared_ptr<class CONSTANT_Class_info> parse(class file &file, std::vector<std::shared_ptr<class cp_info>> &elements);
+
 	std::string const name;
 
 private:
@@ -86,8 +64,8 @@ private:
 class CONSTANT_NameAndType_info : public cp_info
 {
 public:
+	static std::shared_ptr<class CONSTANT_NameAndType_info> parse(class file &file, std::vector<std::shared_ptr<class cp_info>> &elements);
 
-	static std::shared_ptr<class CONSTANT_NameAndType_info> parse(class file &file, class cp const &cp);
 	std::string const name;
 	std::vector<std::shared_ptr<class type>> const types;
 
@@ -99,7 +77,8 @@ private:
 class ref_info : public cp_info
 {
 public:
-	static std::shared_ptr<class ref_info> parse(class file &file, class cp const &cp);
+	static std::shared_ptr<class ref_info> parse(class file &file, std::vector<std::shared_ptr<class cp_info>> &elements);
+
 	std::shared_ptr<CONSTANT_Class_info> const clss;
 	std::shared_ptr<CONSTANT_NameAndType_info> const name_and_type;
 
@@ -112,7 +91,8 @@ private:
 class CONSTANT_String_info : public cp_info
 {
 public:
-	static std::shared_ptr<class CONSTANT_String_info> parse(class file &file, class cp const &cp);
+	static std::shared_ptr<class CONSTANT_String_info> parse(class file &file, std::vector<std::shared_ptr<class cp_info>> &elements);
+
 	std::string const value;
 
 private:
@@ -123,7 +103,8 @@ private:
 class CONSTANT_Integer_info : public cp_info
 {
 public:
-	static std::shared_ptr<class CONSTANT_Integer_info> parse(class file &file, class cp const &cp);
+	static std::shared_ptr<class CONSTANT_Integer_info> parse(class file &file, std::vector<std::shared_ptr<class cp_info>> &elements);
+
 	uint32_t const value;
 
 private:

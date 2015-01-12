@@ -8,12 +8,14 @@
 class self
 {
 public:
-	self();
-	self(class file &file);
+	static class self parse(class file &file);
 
-	uint16_t access_flags;
-	uint16_t this_class;
-	uint16_t super_class;
+	uint16_t const access_flags;
+	uint16_t const this_class;
+	uint16_t const super_class;
+
+private:
+	self(uint16_t access_flags, uint16_t this_class, uint16_t super_class);
 };
 
 #endif

@@ -21,26 +21,22 @@ namespace stack_elem
 		virtual ~base() {}
 	};
 
-#define macro_val_const(name, type, by_default)			\
-	class name##_const : public base			\
-	{							\
-	public:							\
-		name##_const() : value(by_default) {}		\
-		name##_const(type value) : value(value) {}	\
-		type const value;				\
-		stack_elem::base *copy() {return new name##_const(value);}\
+	template<typename type>
+	class const_val : public base
+	{
+	public:
+		const_val();
+		const_val(type value);
+
+		type const value;
 	};
-	macro_val_const(int, int, 0)
-	macro_val_const(bool, bool, 0)
-	macro_val_const(string, std::string, "")
-#undef macro_val_const
 
 	class array_ref : public base
 	{
 	public:
 		array_ref(uint32_t size);
 
-		std::shared_ptr<std::vector<std::shared_ptr<stack_elem::int_const>>> vec;
+		std::shared_ptr<std::vector<std::shared_ptr<stack_elem::const_val<int>>>> vec;
 	};
 
 	class class_ref : public base
@@ -55,7 +51,6 @@ namespace stack_elem
 	public:
 		print_class() : class_ref(std::shared_ptr<class clss>(new print_clss())) {}
 	};
-
 }
 
 class class_state

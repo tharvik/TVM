@@ -1,9 +1,10 @@
 namespace stack_elem
 {
 	class base;
-	class int_const;
-	class string_const;
 	class class_ref;
+
+	template<typename type>
+	class const_val;
 }
 
 class vm;
