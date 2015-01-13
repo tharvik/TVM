@@ -31,14 +31,6 @@ namespace stack_elem
 		type const value;
 	};
 
-	class array_ref : public base
-	{
-	public:
-		array_ref(uint32_t size);
-
-		std::shared_ptr<std::vector<std::shared_ptr<stack_elem::const_val<int>>>> vec;
-	};
-
 	class class_ref : public base
 	{
 	public:
@@ -46,10 +38,18 @@ namespace stack_elem
 		std::shared_ptr<class clss> cls;
 	};
 
+	class array_ref : public class_ref
+	{
+	public:
+		array_ref(uint32_t size);
+
+		std::shared_ptr<std::vector<std::shared_ptr<stack_elem::const_val<int>>>> vec;
+	};
+
 	class print_class : public class_ref
 	{
 	public:
-		print_class() : class_ref(std::shared_ptr<class clss>(new print_clss())) {}
+		print_class();
 	};
 }
 

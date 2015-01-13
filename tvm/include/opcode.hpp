@@ -78,7 +78,6 @@ namespace opcode
 		static std::unique_ptr<class name> parse(file& file);\
 		void exec(class bc const &bc) const;	\
 							\
-	private:					\
 		name() {}				\
 	};
 	opcode_trivial(aload_0)
@@ -132,8 +131,8 @@ namespace opcode
 	public:						\
 		static std::unique_ptr<class name> parse(file& file);\
 		void exec(class bc const &bc) const;	\
-	private:					\
-		name(int16_t branch) : jump(branch) {}\
+							\
+		name(int16_t branch) : jump(branch) {}	\
 	};
 	opcode_if(if_acmpeq)
 	opcode_if(if_acmpne)
@@ -165,7 +164,6 @@ namespace opcode
 	public:
 		static std::unique_ptr<class base> parse(class file &file);
 		void exec(class bc const &bc) const;
-
 	private:
 		iconst<num>() {}
 	};
@@ -181,6 +179,18 @@ namespace opcode
 
 	protected:
 		push(type data) : base(sizeof(type)), data(data) {}
+	};
+
+
+
+	template<typename type, short num>
+	class load : public trivial
+	{
+	public:
+		static std::unique_ptr<class base> parse(class file &file);
+		void exec(class bc const &bc) const;
+	private:
+		load<type,num>() {}
 	};
 };
 

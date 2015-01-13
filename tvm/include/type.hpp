@@ -50,12 +50,12 @@ public:
 	bool operator <(class type_class const &other) const;
 };
 
-class type_array : public type
+class type_array : public type_class
 {
 public:
 	std::shared_ptr<class type> contained;
 
-	type_array(std::shared_ptr<class type> contained) : contained(contained) {}
+	type_array(std::shared_ptr<class type> contained) : type_class("array"), contained(contained) {}
 
 	bool operator <(class type_array const &other) const;
 };

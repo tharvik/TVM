@@ -16,10 +16,17 @@ clss::clss()
 
 }
 
-clss::clss(std::string name)
-	: bc(bc::parse(name + ".class"))
+clss::clss(std::string name) : clss(name, true)
 {
-	this->name = name;
+
+}
+
+clss::clss(std::string name, bool load_bc) : name(name)
+{
+	if (!load_bc)
+		return;
+
+	bc = bc::parse(name + ".class");
 
 	std::cerr << "--> load new class: " << name << std::endl;
 
@@ -39,6 +46,7 @@ clss::clss(std::string name)
 	else
 		parent = std::make_shared<class clss>(info->name);
 }
+
 
 void clss::run_func(
 		std::string const class_name,
@@ -62,6 +70,11 @@ void clss::run_func(
 	}
 }
 
+String::String(std::string value) : clss("Ljava/lang/String", false), value(value)
+{
+
+}
+
 void print_clss::run_func(
 			std::string const class_name __attribute__ ((unused)),
 			std::string const name,
@@ -76,7 +89,8 @@ void print_clss::run_func(
 	std::shared_ptr<class type_class> resolved_class;
 	if ((resolved_class = std::dynamic_pointer_cast<type_class>(types.at(0))) != nullptr
 	    && resolved_class->name == "Ljava/lang/String") {
-		auto val = util::dpc<stack_elem::const_val<std::string>>(elem);
+	    	auto ref = util::dpc<stack_elem::class_ref>(elem);
+		auto val = util::dpc<String>(ref->cls);
 		std::cout << val->value << std::endl;
 	} else {
 		auto val = util::dpc<stack_elem::const_val<int>>(elem);
@@ -120,19 +134,22 @@ void StringBuilder::run_func(
 	if (name == "append") {
 		elem = args.at(1);
 
-		std::dynamic_pointer_cast<stack_elem::const_val<int>>(elem);
+		auto int_val = std::dynamic_pointer_cast<stack_elem::const_val<int>>(elem);
+		auto string_val = std::dynamic_pointer_cast<stack_elem::class_ref>(elem);
 
-#define macro_append(name, type)				\
-		auto name##_val = std::dynamic_pointer_cast<stack_elem::const_val<type>>(elem);\
-		if (name##_val != nullptr)		\
-			elem = append(name##_val);
-		macro_append(int, int)
-		macro_append(string, std::string)
-#undef macro_append
+		if (int_val != nullptr)
+			elem = append(int_val);
+		else if (string_val != nullptr && string_val->cls->name == "Ljava/lang/String")
+			elem = append(string_val);
+		else {
+			std::cerr << string_val->cls->name << std::endl;
+			throw "unimplemented StringBuilder.append func";
+		}
+
 	} else if (name == "toString") {
 		elem = toString();
 	} else {
-		throw "Unimplemented printing func";
+		throw "unimplemented StringBuilder func";
 	}
 
 	if (elem == nullptr)
@@ -150,15 +167,17 @@ std::shared_ptr<class stack_elem::class_ref> StringBuilder::append(std::shared_p
 	return std::shared_ptr<class stack_elem::class_ref>(new stack_elem::class_ref(n));
 }
 
-std::shared_ptr<class stack_elem::class_ref> StringBuilder::append(std::shared_ptr<class stack_elem::const_val<std::string>> elem)
+std::shared_ptr<class stack_elem::class_ref> StringBuilder::append(std::shared_ptr<class stack_elem::class_ref> elem)
 {
 	auto n = std::shared_ptr<class StringBuilder>(new StringBuilder());
-	n->str = str + elem->value;
+	auto cls = util::dpc<String>(elem->cls);
+	n->str = str + cls->value;
 
 	return std::shared_ptr<class stack_elem::class_ref>(new stack_elem::class_ref(n));
 }
 
-std::shared_ptr<class stack_elem::const_val<std::string>> StringBuilder::toString()
+std::shared_ptr<class stack_elem::class_ref> StringBuilder::toString()
 {
-	return std::shared_ptr<class stack_elem::const_val<std::string>>(new stack_elem::const_val<std::string>(str));
+	auto s = std::make_shared<String>(str);
+	return std::make_shared<stack_elem::class_ref>(s);
 }

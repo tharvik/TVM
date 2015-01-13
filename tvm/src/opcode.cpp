@@ -25,6 +25,12 @@ std::unique_ptr<opcode::base> opcode::base::parse(file& file)
 #include "../macro/opcode/push.m"
 #undef macro_push
 
+#define macro_load(id, type, size)		\
+	case id:				\
+		return load<type,size>::parse(file);
+#include "../macro/opcode/load.m"
+#undef macro_push
+
 
 
 
@@ -95,9 +101,10 @@ void opcode::ldc::exec(class bc const &bc) const
 
 	std::shared_ptr<class CONSTANT_String_info> str;
 	std::shared_ptr<class CONSTANT_Integer_info> integer;
-	if ((str = std::dynamic_pointer_cast<CONSTANT_String_info>(info)))
-		elem = std::shared_ptr<class stack_elem::const_val<std::string>>(new stack_elem::const_val<std::string>(str->value));
-	else if ((integer = std::dynamic_pointer_cast<CONSTANT_Integer_info>(info)))
+	if ((str = std::dynamic_pointer_cast<CONSTANT_String_info>(info))) {
+		auto cls = std::make_shared<String>(str->value);
+		elem = std::make_shared<stack_elem::class_ref>(cls);
+	} else if ((integer = std::dynamic_pointer_cast<CONSTANT_Integer_info>(info)))
 		elem = std::shared_ptr<class stack_elem::const_val<int>>(new stack_elem::const_val<int>(integer->value));
 
 	vm.stack.push(elem);
@@ -389,16 +396,11 @@ void opcode::if_acmp##name::exec(class bc const& bc __attribute__ ((unused))) co
 	class vm &vm = manager::get_instance().get_vm();	\
 								\
 	bool comp = false;					\
-	if (dynamic_cast<class stack_elem::class_ref*>(&*vm.stack.top()) != nullptr) {\
+	if (std::dynamic_pointer_cast<class stack_elem::class_ref>(vm.stack.top()) != nullptr) {\
 		auto value2 = util::dpc<class stack_elem::class_ref>(vm.stack.top()); vm.stack.pop();\
 		auto value1 = util::dpc<class stack_elem::class_ref>(vm.stack.top()); vm.stack.pop();\
 								\
 		comp = value1->cls op value2->cls;		\
-	} else if (dynamic_cast<class stack_elem::const_val<std::string>*>(&*vm.stack.top()) != nullptr) {\
-		auto value2 = util::dpc<class stack_elem::const_val<std::string>>(vm.stack.top()); vm.stack.pop();\
-		auto value1 = util::dpc<class stack_elem::const_val<std::string>>(vm.stack.top()); vm.stack.pop();\
-								\
-		comp = &value1 op &value2;			\
 	} else							\
 		throw "Unknow value to cast";			\
 								\
@@ -515,6 +517,7 @@ void opcode::iaload::exec(class bc const& bc __attribute__ ((unused))) const
 
 
 
+
 namespace opcode
 {
 	template<short num>
@@ -526,7 +529,7 @@ namespace opcode
 	template<short num>
 	void iconst<num>::exec(class bc const &bc __attribute__ ((unused))) const
 	{
-		log_name("iconst_" + num);
+		log_name("iconst_" + std::to_string(num));
 		class vm &vm = manager::get_instance().get_vm();
 		auto elem = std::shared_ptr<class stack_elem::const_val<int>>(new stack_elem::const_val<int>(num));
 		vm.stack.push(elem);
@@ -545,9 +548,29 @@ namespace opcode
 	template<typename type>
 	void push<type>::exec(class bc const &bc __attribute__ ((unused))) const
 	{
-		log_name("push" + sizeof(type));
+		log_name("push_" + std::to_string(sizeof(type)));
 
 		auto elem = std::make_shared<class stack_elem::const_val<int>>(data);
 		manager::get_instance().get_vm().stack.push(elem);
+	}
+}
+
+namespace opcode
+{
+	template<typename type, short num>
+	std::unique_ptr<class base> load<type,num>::parse(file& file __attribute__ ((unused)))
+	{
+		return std::unique_ptr<load<type,num>>(new load<type,num>());
+	}
+
+	template<typename type, short num>
+	void load<type,num>::exec(class bc const &bc __attribute__ ((unused))) const
+	{
+		log_name("load_" + std::to_string(num));
+
+		class vm &vm = manager::get_instance().get_vm();
+		auto a = &*vm.vars.at(num);
+		auto elem = util::dpc<type>(vm.vars.at(num));
+		vm.stack.push(elem);
 	}
 }

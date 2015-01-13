@@ -32,11 +32,16 @@ void vm::pc_goto(int32_t index)
 	pc = i;
 }
 
-stack_elem::array_ref::array_ref(uint32_t size) : vec(new std::vector<std::shared_ptr<stack_elem::const_val<int>>>())
+stack_elem::array_ref::array_ref(uint32_t size) : class_ref(nullptr), vec(new std::vector<std::shared_ptr<stack_elem::const_val<int>>>())
 {
 	vec->reserve(size);
 	for(; size > 0; size--)
 		vec->push_back(std::make_shared<class stack_elem::const_val<int>>(0));
+}
+
+stack_elem::print_class::print_class() : class_ref(std::shared_ptr<class clss>(new print_clss()))
+{
+
 }
 
 namespace stack_elem
