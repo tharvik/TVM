@@ -16,19 +16,19 @@ std::unique_ptr<opcode::base> opcode::base::parse(file& file)
 #define macro_iconst(id, size)			\
 	case id:				\
 		return iconst<size>::parse(file);
-#include "../macro/opcode/iconst.m"
+#include "../macro/opcode/iconst"
 #undef macro_iconst
 
 #define macro_push(id, type)			\
 	case id:				\
 		return push<type>::parse(file);
-#include "../macro/opcode/push.m"
+#include "../macro/opcode/push"
 #undef macro_push
 
 #define macro_load(id, type, size)		\
 	case id:				\
 		return load<type,size>::parse(file);
-#include "../macro/opcode/load.m"
+#include "../macro/opcode/load"
 #undef macro_push
 
 
@@ -37,7 +37,7 @@ std::unique_ptr<opcode::base> opcode::base::parse(file& file)
 #define opcode_macro(name, id, size)		\
 	case id:				\
 		return name::parse(file);
-#include "../macro/opcode/opcode.m"
+#include "../macro/opcode/opcode"
 #undef opcode_macro
 	}
 
@@ -569,7 +569,6 @@ namespace opcode
 		log_name("load_" + std::to_string(num));
 
 		class vm &vm = manager::get_instance().get_vm();
-		auto a = &*vm.vars.at(num);
 		auto elem = util::dpc<type>(vm.vars.at(num));
 		vm.stack.push(elem);
 	}

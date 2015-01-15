@@ -65,7 +65,7 @@ std::shared_ptr<attribute_info> attribute::get_element(class file& file, class c
 #define attribute_macro(type)	\
 	if (name == #type)	\
 		return get_element<type##_attribute>(file, cp);
-#include "../macro/attribute.m"
+#include "../macro/attribute"
 #undef attribute_macro
 
 	std::cerr << "Unknow attribute: " << name << std::endl;

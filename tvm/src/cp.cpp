@@ -29,7 +29,7 @@ void cp::add_element(file& file, std::vector<std::shared_ptr<class cp_info>> &el
 	enum tag {
 	#define cp_macro(name, type, id)	\
 		name = id,
-	#include "../macro/cp.m"
+	#include "../macro/cp"
 	#undef cp_macro
 	};
 
@@ -39,7 +39,7 @@ void cp::add_element(file& file, std::vector<std::shared_ptr<class cp_info>> &el
 	case name:					\
 		info = type##_info::parse(file, elements); 	\
 		break;
-#include "../macro/cp.m"
+#include "../macro/cp"
 #undef cp_macro
 
 	default:

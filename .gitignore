@@ -31,3 +31,11 @@ doxygen
 bin
 ValgrindOut.xml
 tvm.*
+
+# autotools
+Makefile
+autom4te.cache/
+config.h
+config.status
+stamp-h1
+tvm
