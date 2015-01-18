@@ -1,0 +1,45 @@
+%If you did not finish what you had planned, explain here what's missing.
+%
+%In any case, describe how you could further extend your compiler in the
+%direction you chose. This section should convince us that you understand the
+%challenges of writing a good compiler for high-level programming languages.
+
+The current TVM is able to run any Tool code, directly from the bytecode, which
+was the target. For improvement, there is the idea of updating it to support any
+java bytecode, which would be nice and not too hard to do.
+
+The missing things are mainly:
+\begin{itemize}
+	\item a more strict type checking, actually, there is not formal
+		verification
+
+	\item some error message, if do not have any debugger handy (like any
+		programmer should have), you wouldn't understand why it isn't
+		working
+
+	\item find more Tool program to work with, even read through cafebabe to
+		see exactly the subset of bytecode generated to then really know
+		what is needed for Tool
+
+	\item add every other bytecodes
+
+	\item add some framework to allow optimisation, as for now, we just
+		\emph{dumbly} execute the code; that will not be too difficult,
+		even statically during the bytecode loading will greatly help
+
+	\item a nice refactoring, some packaging and some tester, using it for
+		every Tool program
+
+	\item moving the bytecode parsing into a seperated library, as it could
+		be of some use standalone (and then write a javap clone)
+
+	\item comply more strictly to the documentation, only supporting exactly
+		what's written, in the path of \emph{dash} or \emph{uclibc}. And
+		also support the weird extensions Java as done, like a custom
+		version of UTF8.
+
+	\item a nice thing to have would be to support enough of Java to use the
+		standard library of openJDK and there test suite; even try to
+		use it as a dropping replacement, not for the speed but as a
+		reference
+\end{itemize}

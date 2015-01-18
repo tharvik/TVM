@@ -1,0 +1,112 @@
+%Give code examples where your extension is useful, and describe how they work
+%with it. Make sure you include examples where the most intricate features of
+%your extension are used, so that we have an immediate understanding of what the
+%challenges are.
+%
+%You can pretty-print tool code like this:
+%\begin{lstlisting}
+%object {
+%  def main() : Unit = { println(new A().foo(-41)); }
+%}
+%
+%class A {
+%  def foo(i : Int) : Int = {
+%    var j : Int;
+%    if(i < 0) { j = 0 - i; } else { j = i; }
+%    return j + 1;
+%  }
+%}
+%\end{lstlisting}
+%
+%This section should convince us that you understand how your extension can be
+%useful and that you thought about the corner cases.
+
+If we take the following Tool code, it will generate with the reference compiler
+the next bytecode (simplified).
+
+\begin{lstlisting}
+object MainObject {
+	def main(): Unit = {
+		println(new A().go());
+	}
+}
+
+class A {
+	def go(): String = {
+		var string: String;
+		string = "Gone!";
+		return string;
+	}
+}
+\end{lstlisting}
+
+object MainObject: CP
+\newline
+\begin{tabular}{r l l} \hline
+	\#14	& Utf8		& java/lang/System	\\
+	\#15	& Class		& \#14			\\
+	\#16	& Utf8		& out			\\
+	\#17	& Utf8		& Ljava/io/PrintStream;	\\
+	\#18	& NameAndType	& \#16:\#17		\\
+	\#19	& Fieldref	& \#15.\#18		\\
+	\#20	& Utf8		& A			\\
+	\#21	& Class		& \#20			\\
+	\#22	& Methodref	& \#21.\#10		\\
+	\#23	& Utf8		& go			\\
+	\#24	& Utf8		& ()Ljava/lang/String;	\\
+	\#25	& NameAndType	& \#23:\#24		\\
+	\#26	& Methodref	& \#21.\#25		\\
+	\#27	& Utf8		& java/io/PrintStream	\\
+	\#28	& Class		& \#27			\\
+	\#29	& Utf8		& println		\\
+	\#30	& Utf8		& (Ljava/lang/String;)V	\\
+	\#31	& NameAndType	& \#29:\#30		\\
+	\#32	& Methodref	& \#28.\#31		\\
+\end{tabular}
+\newline
+
+object MainObject: main()
+\newline
+\begin{tabular}{r l l} \hline
+	0	& getstatic	& \#19	\\
+	3	& new		& \#21	\\
+	6	& dup		&	\\
+	7	& invokespecial	& \#22	\\
+	10	& invokevirtual	& \#26	\\
+	13	& invokevirtual	& \#32	\\
+	16	& return	&	\\
+\end{tabular}
+\newline
+
+class A: CP
+\newline
+\begin{tabular}{r l l} \hline
+	\#15	& String	& \#14	\\
+\end{tabular}
+\newline
+
+class A: go()
+\newline
+\begin{tabular}{r l l} \hline
+	0	& ldc		& \#15	\\
+	2	& astore\_1	&	\\
+	3	& aload\_1	&	\\
+	4	& areturn	&	\\
+\end{tabular}
+\newline
+
+First we load \emph{MainObject.class}, parse to get the CP, load the bytecode
+for every methods and run the asked one (if it is the main object, then, default
+to \emph{main()}). As you can see, there is number of back references, so there
+is a number of back resolution to do, luckily, we can do it in a single pass, as
+there is not any foward one. In our case, some are already resolved during
+the parsing stage (as the String ones which do not referee to the UTF8 one).
+Next, we parse every methods and its attributes, to finally find the opcodes in
+the "Code" attribute, which we run.
+
+Encountering the \emph{new} opcode, we load the new class referenced by it,
+namely \emph{A.class}. Here the same happen parsing phase comes in place (if
+there was a more complex class hierarchy, it will also load parent class).
+Then, with the line 10, we call the function \emph{go()} in the newly loaded
+class. A new frame is pushed, and it goes on until it encounter a return, where
+it pop the frame and continue running the previous one.

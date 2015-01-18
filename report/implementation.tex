@@ -1,0 +1,88 @@
+%This is a very important section, you explain to us how you made it work.
+%
+%\subsection{Theoretical Background}
+%If you are using theoretical concepts, explain them first in this subsection.
+%Even if they come from the course (eg. lattices), try to explain the essential
+%points \emph{in your own words}. Cite any reference work you used like this
+%\cite{TigerBook}. This should convince us that you know the theory behind what
+%you coded. 
+%
+%\subsection{Implementation Details}
+%Describe all non-obvious tricks you used. Tell us what you thought was hard and
+%why. If it took you time to figure out the solution to a problem, it probably
+%means it wasn't easy and you should definitely describe the solution in details
+%here. If you used what you think is a cool algorithm for some problem, tell us.
+%Do not however spend time describing trivial things (we what a tree traversal
+%is, for instance). 
+%
+%After reading this section, we should be convinced that you knew what you were
+%doing when you wrote your extension, and that you put some extra consideration
+%for the harder parts.
+
+\subsection{Theoretical Background}
+TVM was written with mainly with \cite{Spec} and with help at first of
+\cite{Wiki}.
+
+The idea was to implement it with a stack of frame, each frame containing the
+currently defined variables and the stack of the function.
+
+At every \emph{invokevirtual}, we push a new frame on the frame stack, setup the
+variables in the registers and run the method's byte code. At every return, we
+get the return value and pop the frame.
+
+\subsection{Implementation Details}
+As there is no dependency, is should easily work on any compliant computer.
+If you have \emph{tup} installed (http://gittup.org/tup/), do
+`cd tvm \&\& tup` and then the bin is at `build-release/tvm`
+
+Otherwise, the next command should do the trick:
+`cd tvm \&\& ./configure \&\& make \&\& make install` and then the bin is at
+`./tvm`
+
+\begin{itemize}
+	\item to avoid too much IO, we only load classes once by run, so we have
+		a manager class keeping loaded instances. It is a singleton by
+		the way
+	\item we use everywhere shared\_ptr (and unique\_ptr depending of the
+		possibility of duplicating or not the elements) to provide a
+		simple way of garbage collecting, thus if we have many many
+		instances of the same class created, every time the element is
+		not needed anymore, it will be deleted (reference counting is
+		this case) (see program/fullObject.tool for an example and watch
+		the system memory not blowing up)
+
+	\item the specialized classes, like \emph{String}, \emph{System.out} or
+		\emph{StringBuilder}, behave just like normal classes but
+		redefine the \emph{run\_func()}
+
+	\item every type checking is made via \emph{dynamic\_pointer\_cast}
+		(and it's utility function \emph{util::dpc()}, to throw is
+		anything goes wrong), there is no formal verification at load
+		time
+
+	\item the current state allow running every Tool programs from the
+		archive provided, it could easily extended to add new opcode,
+		should the need arise (it was written this way, tests driven
+		development with the examples programs)
+
+	\item more or less every classes involved in parsing the byte code, have
+		a \emph{parse()} function, to return the correct instance of the
+		wanted class, as there is no way to return anything more than
+		the requested type of the instance in C++
+
+	\item there is a heavy use of macros, which are slowly progressing
+		toward templates, as these are type safe but harder to implement
+		nicely. You can see some examples in \emph{opcode.cpp} and the
+		parsing part is more or less done. There is also some template
+		specialization to ease in general with readability
+
+	\item there is some empty parser code, like \emph{interface} existing
+		solely to skip part of the file. It is still needed however to
+		allow easy extension should it be needed
+
+	\item some opcode, namely \emph{invokespecial} are just implemented as
+		pop, as there is no real creation of object, everything is done
+		during \emph{new}. There is also the \emph{getstatic} which push
+		\emph{SystemOut} directly on the stack, without any verification
+		as this is the only one using this opcode (in Tool)
+\end{itemize}
