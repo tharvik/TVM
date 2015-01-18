@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/bin/sh
+
 latex report
 latex report
 bibtex report
