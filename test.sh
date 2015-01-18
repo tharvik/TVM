@@ -1,7 +1,7 @@
 #!/bin/bash
 
 readonly ref='toolc-reference-*.jar'
-readonly tes='tvm/bin/Debug/tvm'
+readonly tes='tvm/build-release/tvm'
 
 check() {
 	local status=$1
