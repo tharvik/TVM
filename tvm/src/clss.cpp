@@ -70,12 +70,12 @@ void clss::run_func(
 	}
 }
 
-String::String(std::string value) : clss("Ljava/lang/String", false), value(value)
+String::String(std::string value) : clss("Ljava/lang/String;", false), value(value)
 {
 
 }
 
-void print_clss::run_func(
+void SystemOut::run_func(
 			std::string const class_name __attribute__ ((unused)),
 			std::string const name,
 			std::vector<std::shared_ptr<class type>> const &types,
@@ -88,7 +88,7 @@ void print_clss::run_func(
 
 	std::shared_ptr<class type_class> resolved_class;
 	if ((resolved_class = std::dynamic_pointer_cast<type_class>(types.at(0))) != nullptr
-	    && resolved_class->name == "Ljava/lang/String") {
+	    && resolved_class->name == "Ljava/lang/String;") {
 	    	auto ref = util::dpc<stack_elem::class_ref>(elem);
 		auto val = util::dpc<String>(ref->cls);
 		std::cout << val->value << std::endl;
@@ -139,7 +139,7 @@ void StringBuilder::run_func(
 
 		if (int_val != nullptr)
 			elem = append(int_val);
-		else if (string_val != nullptr && string_val->cls->name == "Ljava/lang/String")
+		else if (string_val != nullptr && string_val->cls->name == "Ljava/lang/String;")
 			elem = append(string_val);
 		else {
 			std::cerr << string_val->cls->name << std::endl;

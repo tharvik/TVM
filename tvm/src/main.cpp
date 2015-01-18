@@ -1,7 +1,6 @@
 enum return_code {
 	NO_ERROR,
-	WRONG_SYNTAX,
-	READ_FILE
+	WRONG_SYNTAX
 };
 
 #include <iostream>
@@ -19,15 +18,14 @@ int main(int argc, char *const *const argv)
 		return WRONG_SYNTAX;
 	}
 
-	std::string file(argv[1]);
-//	std::string file("asd_class.class");
+	std::string const ext = ".class";
 
-	//class manager manager(argv[1]);
-	//manager.run();
-	file.resize(file.length() - 6);
+	std::string file(argv[1]);
+	if(file.length() > ext.length()
+	   && file.substr(file.length() - ext.length()) == ext)
+		file.resize(file.length() - ext.length());
 
 	manager::get_instance().run(file);
-//	delete cls;
 
 	return NO_ERROR;
 }

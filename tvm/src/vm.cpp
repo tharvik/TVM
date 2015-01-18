@@ -39,11 +39,6 @@ stack_elem::array_ref::array_ref(uint32_t size) : class_ref(nullptr), vec(new st
 		vec->push_back(std::make_shared<class stack_elem::const_val<int>>(0));
 }
 
-stack_elem::print_class::print_class() : class_ref(std::shared_ptr<class clss>(new print_clss()))
-{
-
-}
-
 namespace stack_elem
 {
 #define macro_const_val(type, default)					\

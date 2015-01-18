@@ -45,12 +45,6 @@ namespace stack_elem
 
 		std::shared_ptr<std::vector<std::shared_ptr<stack_elem::const_val<int>>>> vec;
 	};
-
-	class print_class : public class_ref
-	{
-	public:
-		print_class();
-	};
 }
 
 class class_state

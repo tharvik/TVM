@@ -50,7 +50,7 @@ public:
 	std::string const value;
 };
 
-class print_clss : public clss
+class SystemOut : public clss
 {
 public:
 	void run_func(

@@ -19,8 +19,6 @@ namespace opcode
 	class base
 	{
 	public:
-		virtual ~base() {} // only for vtable
-
 		static std::unique_ptr<base> parse(class file& file);
 
 		unsigned short const size;

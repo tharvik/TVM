@@ -22,7 +22,7 @@ void manager::run(std::string name)
 
 	std::vector<std::shared_ptr<class type>> types;
 
-	auto str = type::get("Ljava/lang/String");
+	auto str = type::get("Ljava/lang/String;");
 	auto arr = type::get(str);
 	types.push_back(arr);
 
@@ -37,7 +37,7 @@ std::shared_ptr<class clss> manager::get_class(std::string name)
 	std::shared_ptr<class clss> cls;
 
 	if (name == "java/io/PrintStream")
-		cls = std::make_shared<class print_clss>();
+		cls = std::make_shared<class SystemOut>();
 	else if (name == "java/lang/StringBuilder")
 		cls = std::make_shared<class StringBuilder>();
 	else

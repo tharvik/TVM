@@ -141,7 +141,7 @@ void opcode::getstatic::exec(class bc const &bc __attribute__ ((unused))) const
 
 	class vm &vm = manager::get_instance().get_vm();
 
-	auto elem = std::shared_ptr<class stack_elem::class_ref>(new stack_elem::class_ref(std::shared_ptr<class clss>(new print_clss())));
+	auto elem = std::shared_ptr<class stack_elem::class_ref>(new stack_elem::class_ref(std::shared_ptr<class clss>(new SystemOut())));
 	vm.stack.push(elem);
 }
 

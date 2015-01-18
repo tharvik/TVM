@@ -27,6 +27,7 @@ static std::shared_ptr<class type> char_to_type(std::string::iterator &iter)
 	case 'L': {
 		std::string class_name;
 		while (*iter != ';') class_name += *iter++;
+		class_name += *iter;
 		type = type::get(class_name);
 		break;
 	}
