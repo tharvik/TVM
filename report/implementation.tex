@@ -24,7 +24,8 @@ TVM was written with mainly with \cite{Spec} and with help at first of
 \cite{Wiki}.
 
 The idea was to implement it with a stack of frame, each frame containing the
-currently defined variables and the stack of the function.
+currently defined variables and the stack of the function. Each frame exists for
+only a single method call, it is then destroyed.
 
 At every \emph{invokevirtual}, we push a new frame on the frame stack, setup the
 variables in the registers and run the method's byte code. At every return, we
@@ -33,16 +34,18 @@ get the return value and pop the frame.
 \subsection{Implementation Details}
 As there is no dependency, is should easily work on any compliant computer.
 If you have \emph{tup} installed (http://gittup.org/tup/), do
-`cd tvm \&\& tup` and then the bin is at `build-release/tvm`
+`cd tvm \&\& tup` and then the bin is `build-release/tvm`
 
 Otherwise, the next command should do the trick:
-`cd tvm \&\& ./configure \&\& make \&\& make install` and then the bin is at
-`./tvm`
+`cd tvm \&\& ./configure \&\& make \&\& make install` and then the bin is
+`./tvm`. To easily package TVM, you can run `make dist` after the configure
+phase.
 
 \begin{itemize}
 	\item to avoid too much IO, we only load classes once by run, so we have
 		a manager class keeping loaded instances. It is a singleton by
 		the way
+
 	\item we use everywhere shared\_ptr (and unique\_ptr depending of the
 		possibility of duplicating or not the elements) to provide a
 		simple way of garbage collecting, thus if we have many many
@@ -85,4 +88,9 @@ Otherwise, the next command should do the trick:
 		during \emph{new}. There is also the \emph{getstatic} which push
 		\emph{SystemOut} directly on the stack, without any verification
 		as this is the only one using this opcode (in Tool)
+
+	\item the names are no really helpful, for example, \emph{vm} is in fact
+		a frame, and \emph{manager} is the vm. The parsing phase could
+		use better names than \emph{cp} (constant pool) or \emph{bc}
+		(byte code)
 \end{itemize}

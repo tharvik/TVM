@@ -21,8 +21,13 @@
 %This section should convince us that you understand how your extension can be
 %useful and that you thought about the corner cases.
 
-If we take the following Tool code, it will generate with the reference compiler
-the next bytecode (simplified).
+We will take a Tool code example and its corresponding output in bytecode
+(nicely parsed with \emph{javap}). To ease with reading, we remove some constant
+pool (CP) element, like references to Object or to class itself, we also
+only kept the opcodes of the \emph{Code} attribute in a given (and remove any
+\emph{init} methods).
+
+\newpage
 
 \begin{lstlisting}
 object MainObject {
@@ -81,6 +86,7 @@ object MainObject: main()
 class A: CP
 \newline
 \begin{tabular}{r l l} \hline
+	\#14	& Utf8		& Gone!	\\
 	\#15	& String	& \#14	\\
 \end{tabular}
 \newline
@@ -105,8 +111,11 @@ Next, we parse every methods and its attributes, to finally find the opcodes in
 the "Code" attribute, which we run.
 
 Encountering the \emph{new} opcode, we load the new class referenced by it,
-namely \emph{A.class}. Here the same happen parsing phase comes in place (if
-there was a more complex class hierarchy, it will also load parent class).
-Then, with the line 10, we call the function \emph{go()} in the newly loaded
-class. A new frame is pushed, and it goes on until it encounter a return, where
-it pop the frame and continue running the previous one.
+namely \emph{A.class}. Here the same parsing phase comes in place (if there was
+a more complex class hierarchy, it will also load parent class). Then, with the
+line 10, we call the function \emph{go()} in the newly loaded class. A new frame
+is pushed, and it goes on until it encounter a return, where it pop the frame
+and continue running the previous one.
+
+It does so until the last opcode is exectued, at this point, the frame have
+nothing left to run, so it's return to it's parent.
